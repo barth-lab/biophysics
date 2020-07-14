@@ -1,33 +1,15 @@
 #!/usr/bin/env rdmd
 
-import std.stdio;
-import std.algorithm;
-
-auto pdb_in(const ref string filename)
-{
-	return File(filename)
-		.byLine.filter!(l => l.length == 80 && l.startsWith("ATOM"));
-}
-
-void pdb_out(Range)(Range lines) {
-	char ch = lines.front.chain;
-
-	foreach (l; lines) {
-		if (l.chain != ch) {
-			writeln("TER");
-			ch = l.chain;
-		}
-		writeln(l);
-	}
-	writeln("END");
-}
-
-char chain(char[] line) { return line[21]; }
-void chain(char[] line, char value) { line[21] = value; }
-
 void main(string[] args)
 {
-	import std.algorithm;
+	import pdb;
+	import std.getopt;
+	bool heavy = false;
+	auto opt = getopt(args, "heavy|v", "Use heavy Atoms", &heavy);
 
-	pdb_in(args[1]).pdb_out;
+	if (args.length != 2) {
+		defaultGetoptPrinter("Usage of " ~args[0] ~":", opt.options);
+		return;
+	}
+	pdb.parse(args[1], heavy).print;
 }
