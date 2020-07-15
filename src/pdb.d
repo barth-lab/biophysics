@@ -14,39 +14,60 @@ auto parse(const ref string filename, bool heavy=false)
 		&& (isAtom(l) || (heavy && isHeavy(l))));
 }
 
-void print(Range)(Range lines) {
+void print(Range)(Range atoms, bool renumberAtoms=false) {
 	import std.stdio;
 
-	char ch = lines.front.chainID;
+	char ch = atoms.front.chainID;
 
-	foreach (l; lines) {
-		if (l.chainID != ch) {
+	int i = 1;
+	foreach (a; atoms) {
+		if (renumberAtoms) { a.serial = i++; }
+
+		if (a.chainID != ch) {
 			writeln("TER");
-			ch = l.chain;
+			ch = a.chainID;
 		}
-		writeln(l);
+		writeln(a);
 	}
 	writeln("END");
 }
+
 
 bool hasLength(char[] l) { return l.length == 80; }
 bool isAtom(char[] l) { return l[0 .. 4] == "ATOM"; }
 bool isHeavy(char[] l) { return l[0 .. 6] == "HETATM"; }
 
-int serial(char[] line) { return line[6 .. 11].strip.to!int; }
-void serial(char[] line, int value) { line[6 .. 11] = format!"%5d"(value); }
+alias Atom = char[];
+
+int serial(Atom atom) { return atom[6 .. 11].strip.to!int; }
+void serial(Atom atom, int value) { atom[6 .. 11] = format!"%5d"(value); }
+
+char chainID(Atom atom) { return atom[21]; }
+void chainID(Atom atom, char value) { atom[21] = value; }
+
+char[] name(Atom atom) { return atom[12 .. 16].strip; }
+void name(Atom atom, const char[] value)
+{
+	import std.ascii;
+	if (value.length >= 4) {
+		atom[12 .. 16] = value[0 .. 4];
+	}
+	else if (value[0].isDigit ) {
+		atom[12 .. 16] = format!"%-4s"(value);
+	}
+	else {
+		
+		atom[12 .. 16] = format!" %-3s"(value);
+	}
+}
 
 unittest {
 	char[80] buf;
 	buf.serial = 123;
-	assert(buf.serial == 123);
-}
-
-char chainID(char[] line) { return line[21]; }
-void chainID(char[] line, char value) { line[21] = value; }
-
-unittest {
-	char[80] buf;
 	buf.chainID = 'A';
+	buf.name = "H";
+
+	assert(buf.serial == 123);
 	assert(buf.chainID == 'A');
+	assert(buf.name == "H");
 }
