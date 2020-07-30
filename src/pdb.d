@@ -1,4 +1,3 @@
-
 module pdb;
 
 import std.algorithm;
@@ -10,24 +9,53 @@ auto parse(const ref string filename, bool heavy=false)
 {
 	import std.stdio;
 	return File(filename).byLine
-		.filter!( l => l.hasLength && l.isAtom || (heavy && l.isHeavy));
+		.filter!( l => l.hasLength && (l.isAtom || (heavy && l.isHeavy)));
 }
 
 void print(Range)(Range atoms, bool renumberAtoms=true) {
 	import std.stdio;
 	import std.range;
-	char ch = atoms.front.chainID;
-	//int  i  = 1;
+	char ch;
+	// char ch = atoms.front.chainID;
+	// can't read front twice if stateful lazy evaluation, i .e renumber
+
 	foreach (i, a; atoms.enumerate(1)) {
 		if (renumberAtoms) { a.serial = i; }
 
 		if (a.chainID != ch) {
-			writefln("%-80s", "TER");
+			if (! i == 1) {
+				writefln("%-80s", "TER");
+			}
 			ch = a.chainID;
 		}
 		writefln("%-80s", a);
 	}
 	writefln("%-80s", "END");
+}
+
+auto renumber(Range)(Range atoms, uint start=1)
+{
+	import std.stdio;
+	import std.range;
+
+	/*immutable diff = start - atoms.front.resSeq;
+	writeln("diff: ", diff);
+	return atoms.map!((atom) {
+		immutable rs = atom.resSeq;
+		writeln("rs: ", rs);
+		atom.resSeq = rs + diff;
+		return atom;
+		});*/
+
+	uint old_number = atoms.front.resSeq;
+	return atoms.map!((atom) {
+		if (atom.resSeq != old_number) {
+			old_number = atom.resSeq;
+			start++;
+		}
+		atom.resSeq = start;
+		return atom;
+		});
 }
 
 bool hasLength(char[] l) { return l.length == 80; }
@@ -36,8 +64,8 @@ bool isHeavy(char[] l) { return l[0 .. 6] == "HETATM"; }
 
 alias Atom = char[];
 
-int serial(const Atom atom) { return atom[6 .. 11].strip.to!int; }
-void serial(Atom atom, int value) { atom[6 .. 11] = value.format!"%5d"; }
+uint serial(const Atom atom) { return atom[6 .. 11].strip.to!uint; }
+void serial(Atom atom, uint value) { atom[6 .. 11] = value.format!"%5u"; }
 
 string name(const Atom atom) { return atom[12 .. 16].strip.to!string; }
 void name(Atom atom, string value)
@@ -64,8 +92,8 @@ void resName(Atom atom, string value){ atom[17 .. 20] = value.format!"%3s"; }
 char chainID(const Atom atom) { return atom[21]; }
 void chainID(Atom atom, char value) { atom[21] = value; }
 
-int resSeq(const Atom atom) { return atom[22 .. 26].strip.to!int; }
-void resSeq(Atom atom, int value) { atom[22 .. 26] = value.format!"%5d"; }
+uint resSeq(const Atom atom) { return atom[22 .. 26].strip.to!uint; }
+void resSeq(Atom atom, uint value) { atom[22 .. 26] = value.format!"%4u"; }
 
 char iCode(const Atom atom) { return atom[26]; }
 void iCode(Atom atom, char value) { atom[26] = value; }
@@ -94,8 +122,9 @@ unittest {
 	assert(buf.serial == 2);
 	assert(buf.name == "CA");
 	assert(buf.altLoc == ' ');
-	assert(buf.chainID == 'A');
 	assert(buf.resName == "PRO");
+	assert(buf.chainID == 'A');
+	assert(buf.resSeq == 51);
 	assert(buf.iCode == ' ');
 	assert(buf.x == -36.257);
 	assert(buf.y == 41.614);
@@ -107,9 +136,10 @@ unittest {
 
 	buf.serial     = 12345;
 	buf.name       = "N";
-	buf.chainID    = 'B';
 	buf.altLoc     = '.';
 	buf.resName    = "PRO";
+	buf.chainID    = 'B';
+	buf.resSeq     = 1234;
 	buf.iCode      = '.';
 	buf.x          = 1;
 	buf.y          = 2;

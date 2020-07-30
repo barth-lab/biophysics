@@ -1,22 +1,22 @@
 #!/usr/bin/env rdmd
 
-int resSeq(T)(T line)
-{
-	return line[23 .. 26].to!int;
-}
 
 void main(string[] args)
 {
-	import std.stdio;
+	import std.getopt;
 	import std.algorithm;
+	import pdb;
 
-	uint oldRes = 0;
-	uint resSeq = 1;
-	File(args[1])
-		.byLine
-		.filter!(l => l.length == 80 && (l.startsWith("ATOM")
-						 || l.startsWith("TER")))
-		.map!(l => (l.startsWith("TER")? "TER" : l))
-		.each!writeln;
-	writeln("END");
+	bool heavy = false;
+	uint start = 1;
+	auto opt = getopt(args,
+			  "heavy|v", "Use heavy Atoms", &heavy,
+			  "start|s", "Start at this value", &start);
+
+	if (args.length != 2 || opt.helpWanted) {
+		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		return;
+	}
+	pdb.parse(args[1], heavy).renumber(start).print;
+
 }
