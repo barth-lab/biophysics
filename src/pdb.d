@@ -5,36 +5,44 @@ import std.conv;
 import std.format;
 import std.string;
 
-auto parse(const ref string filename, bool heavy=false)
-{
+auto parse(const ref string filename, bool heterogen=false) {
 	import std.stdio;
-	return File(filename).byLine
-		.filter!( l => l.hasLength && (l.isAtom || (heavy && l.isHeavy)));
+	return File(filename).byLine.filter !(
+	        l => l.hasLength &&
+	            (l.isAtom || (heterogen && l.isHeterogen)));
 }
 
-void print(Range)(Range atoms, bool renumberAtoms=true) {
+void print(Range)(Range atoms) {
 	import std.stdio;
 	import std.range;
-	char ch;
-	// char ch = atoms.front.chainID;
-	// can't read front twice if stateful lazy evaluation, i .e renumber
+	char ch = atoms.front.chainID;
+	int  i  = 1;
+	char[80] old;
 
-	foreach (i, a; atoms.enumerate(1)) {
-		if (renumberAtoms) { a.serial = i; }
-
+	foreach (a; atoms) {
 		if (a.chainID != ch) {
-			if (! i == 1) {
-				writefln("%-80s", "TER");
-			}
-			ch = a.chainID;
+			ch         = a.chainID;
+			old.serial = i++;
+			old[0 .. $].ter.writeln;
 		}
+		a.serial = i++;
+		old      = a;
 		writefln("%-80s", a);
 	}
+	old.serial = i++;
+	old[0..$].ter.writeln;
 	writefln("%-80s", "END");
 }
 
-auto renumber(Range)(Range atoms, uint start=1)
-{
+string ter(Atom a) {
+	char[80] t = a;	
+	t[0 .. 6]  = "TER   ";
+	t[11 .. 17].fill(' ');
+	t[27 .. $].fill(' ');
+	return t.to!string;
+}
+
+auto renumber(Range)(Range atoms, uint start=1) {
 	import std.stdio;
 	import std.range;
 
@@ -47,7 +55,9 @@ auto renumber(Range)(Range atoms, uint start=1)
 		return atom;
 		});*/
 
-	uint old_number = atoms.front.resSeq;
+	uint old_number = 0;
+	start--;
+
 	return atoms.map!((atom) {
 		if (atom.resSeq != old_number) {
 			old_number = atom.resSeq;
@@ -55,12 +65,12 @@ auto renumber(Range)(Range atoms, uint start=1)
 		}
 		atom.resSeq = start;
 		return atom;
-		});
+	});
 }
 
-bool hasLength(char[] l) { return l.length == 80; }
-bool isAtom(char[] l) { return l[0 .. 4] == "ATOM"; }
-bool isHeavy(char[] l) { return l[0 .. 6] == "HETATM"; }
+bool hasLength(char[] l) { return l.length  == 80; }
+bool isAtom(char[] l)    { return l[0 .. 4] == "ATOM"; }
+bool isHeterogen(char[] l)   { return l[0 .. 6] == "HETATM"; }
 
 alias Atom = char[];
 
