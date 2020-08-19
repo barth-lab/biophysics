@@ -7,28 +7,37 @@ import std.string;
 
 auto parse(const ref string filename, bool heterogen=false) {
 	import std.stdio;
-	return File(filename).byLine.filter !(
-	        l => l.hasLength &&
-	            (l.isAtom || (heterogen && l.isHeterogen)));
+	return File(filename).byLine.filter!( l =>
+		l.hasLength && (l.isAtom || (heterogen && l.isHeterogen)));
 }
 
 void print(Range)(Range atoms) {
 	import std.stdio;
 	import std.range;
-	char ch = atoms.front.chainID;
+
+	auto ai = atoms.front;
+	char ch = ai.chainID;
 	int  i  = 1;
 	char[80] old;
 
-	foreach (a; atoms) {
-		if (a.chainID != ch) {
-			ch         = a.chainID;
+	for(;;) {
+		if (ai.chainID != ch) {
+			ch         = ai.chainID;
 			old.serial = i++;
-			old[0 .. $].ter.writeln;
+			old[0..$].ter.writeln;
 		}
-		a.serial = i++;
-		old      = a;
-		writefln("%-80s", a);
-	}
+		ai.serial = i++;
+		old       = ai;
+
+		writefln("%-80s", ai);
+		
+		atoms.popFront;
+		if (atoms.empty) {
+			break;
+		}
+		ai = atoms.front;
+	} 
+
 	old.serial = i++;
 	old[0..$].ter.writeln;
 	writefln("%-80s", "END");
@@ -36,13 +45,13 @@ void print(Range)(Range atoms) {
 
 string ter(Atom a) {
 	char[80] t = a;	
-	t[0 .. 6]  = "TER   ";
-	t[11 .. 17].fill(' ');
-	t[27 .. $].fill(' ');
+	t[0..6]    = "TER   ";
+	t[11..17].fill(' ');
+	t[27..$].fill(' ');
 	return t.to!string;
 }
 
-auto renumber(Range)(Range atoms, uint start=1) {
+auto renumber(Range)(lazy Range atoms, uint start=1) {
 	import std.stdio;
 	import std.range;
 

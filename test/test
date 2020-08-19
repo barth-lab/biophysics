@@ -19,5 +19,6 @@ for f in input/*.pdb;do
 
 	../src/copy.d $f | ediff output/${name}_copy.pdb 
 	../src/renumber.d $f | ediff output/${name}_renumber.pdb 
+	../src/renumber.d -s 10 $f | ediff output/${name}_renumber_10.pdb 
 
 done
