@@ -18,7 +18,17 @@ for f in input/*.pdb;do
 	name=${name%.pdb}
 
 	../src/copy.d $f | ediff output/${name}_copy.pdb 
+
 	../src/renumber.d $f | ediff output/${name}_renumber.pdb 
 	../src/renumber.d -s 10 $f | ediff output/${name}_renumber_10.pdb 
 
+	../src/translate.d -x100 -c Z $f | ediff output/${name}_copy.pdb 
+	../src/translate.d -x100 $f | ediff output/${name}_translate_x100.pdb 
+	../src/translate.d -y-23 $f | ediff output/${name}_translate_y-23.pdb 
+	../src/translate.d -z333 $f | ediff output/${name}_translate_z333.pdb 
+	../src/translate.d -x1 -y2 -z3 $f | ediff output/${name}_translate_x1_y2_z3.pdb 
+
 done
+
+f=input/3zev.pdb
+../src/translate.d -y 23 -c BD $f | ediff output/${name}_translate_y23_BD.pdb 
