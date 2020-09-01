@@ -1,4 +1,4 @@
-module pdb;
+module biophysics.pdb;
 
 import std.algorithm;
 import std.conv;

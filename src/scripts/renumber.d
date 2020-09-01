@@ -5,7 +5,7 @@ void main(string[] args)
 {
 	import std.getopt;
 	import std.algorithm;
-	import pdb;
+	import biophysics.pdb;
 
 	bool non   = false;
 	uint start = 1;
@@ -17,6 +17,5 @@ void main(string[] args)
 		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
 		return;
 	}
-	pdb.parse(args[1], non).renumber(start).print;
-
+	parse(args[1], non).renumber(start).print;
 }

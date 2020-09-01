@@ -1,7 +1,7 @@
 #!/usr/bin/env rdmd
 
+import biophysics.pdb;
 auto translate(Range)(Range atoms, double x, double y, double z, string chain) {
-	import pdb;
 	import std.math;
 	import std.algorithm;
 
@@ -18,7 +18,6 @@ auto translate(Range)(Range atoms, double x, double y, double z, string chain) {
 void main(string[] args) {
 	import std.getopt;
 	import std.algorithm;
-	import pdb;
 
 	bool non = false;
 	double x,y,z;
@@ -34,6 +33,5 @@ void main(string[] args) {
 		defaultGetoptPrinter("Usage of " ~ __FILE__ ~ ":", opt.options);
 		return;
 	}
-	pdb.parse(args[1], non).translate(x, y, z, chain).print;
-
+	parse(args[1], non).translate(x, y, z, chain).print;
 }

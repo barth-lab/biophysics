@@ -1,10 +1,11 @@
 #!/usr/bin/env rdmd
 
 
+import biophysics.pdb;
+
 double rmsd(R1, R2)(R1 atoms1, R2 atoms2) {
 	import std.range;
 	import std.math;
-	import pdb;
 	double s = 0;
 	int    l = 0;
 	foreach (a1, a2; zip(atoms1, atoms2)) {
@@ -21,7 +22,6 @@ void main(string[] args) {
 	import std.getopt;
 	import std.algorithm;
 	import std.stdio;
-	import pdb;
 
 	bool non = false;
 	string chain = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -34,8 +34,8 @@ void main(string[] args) {
 		return;
 	}
 
-	auto pdb1 = pdb.parse(args[1], non).filter!(a => a.name == "CA");
-	auto pdb2 = pdb.parse(args[2], non).filter!(a => a.name == "CA");
+	auto pdb1 = parse(args[1], non).filter!(a => a.name == "CA");
+	auto pdb2 = parse(args[2], non).filter!(a => a.name == "CA");
 
 	writefln("%+.3e", rmsd(pdb1, pdb2));
 }

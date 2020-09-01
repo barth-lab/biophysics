@@ -2,7 +2,7 @@
 
 void main(string[] args)
 {
-	import pdb;
+	import biophysics.pdb;
 	import std.getopt;
 	bool non = false;
 	auto opt = getopt(args, "non_standard|n", "Use non-standard residues", &non);
@@ -11,5 +11,5 @@ void main(string[] args)
 		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
 		return;
 	}
-	pdb.parse(args[1], non).print;
+	parse(args[1], non).print;
 }

@@ -24,7 +24,7 @@ void main(string[] args) {
 	import std.stdio;
 	import std.array;
 	import std.string;
-	import pdb;
+	import biophysics.pdb;
 
 	bool   non      = false;
 	string ids      = "";
@@ -51,8 +51,7 @@ void main(string[] args) {
 	if (ids.empty) ids=chains;
 
 	immutable resSeqs = str2index(residues);
-	resSeqs.writeln;
-	auto as = pdb.parse(args[1], non)
+	auto as = parse(args[1], non)
 		       .filter!(a => chains.canFind(a.chainID))
 		       .filter!(a => resSeqs.canFind(a.resSeq))
 		       .map!dup
