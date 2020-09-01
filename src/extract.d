@@ -1,5 +1,23 @@
 #!/usr/bin/env rdmd
 
+auto str2index(string s) {
+	import std.array;
+	import std.conv;
+
+	int[] index;
+	immutable csplits = s.split(',');
+	foreach (csp; csplits) {
+		immutable dsplits = csp.split('-');	
+		if (dsplits.length == 1) index ~= dsplits[0].to!int;
+		else {
+			immutable from = dsplits[0].to!int;
+			immutable to   = dsplits[1].to!int + 1;
+			foreach (i; from .. to) index ~= i;
+		}
+	}
+	return index;
+}
+
 void main(string[] args) {
 	import std.getopt;
 	import std.algorithm;
@@ -8,28 +26,44 @@ void main(string[] args) {
 	import std.string;
 	import pdb;
 
-	bool   non     = false;
-	bool   rechain = false;
-	string chain   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	auto opt       = getopt(args,
-				"non_standard|n", "Use non-standard residued", &non,
-				"rechain|r", "Renumber chains A through Z", &rechain,
-				"chains|c", "Chains to translate, default = all", &chain);
+	bool   non      = false;
+	string ids      = "";
+	string chains   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	string residues = "1-9999";
+	auto opt        = getopt(args,
+				"non_standard|n",
+				"Use non-standard residued",
+				&non,
+				"chainIDs|i",
+				"Use these chainIDs instead of the original one",
+				&ids,
+				"chains|c",
+				"Chains to extract, default = all",
+				&chains,
+				"residues|r",
+				"Residues to extract, default = 1-9999",
+				&residues);
 
 	if (args.length != 2 || opt.helpWanted) {
 		defaultGetoptPrinter("Usage of " ~ __FILE__ ~ ":", opt.options);
 		return;
 	}
+	if (ids.empty) ids=chains;
 
-	auto a = pdb.parse(args[1], non)
-		       .filter!(a => chain.canFind(a.chainID))
+	immutable resSeqs = str2index(residues);
+	resSeqs.writeln;
+	auto as = pdb.parse(args[1], non)
+		       .filter!(a => chains.canFind(a.chainID))
+		       .filter!(a => resSeqs.canFind(a.resSeq))
 		       .map!dup
 		       .array;
 
-	auto pout = chain.map!(c => a.filter!(a => a.chainID == c)).joiner;
+	if (as.empty) return;
 
-	if (rechain) pout.map!((a) {
-		a.chainID = cast(char)('A' + chain.indexOf(a.chainID));
-		return a;}).print;
-	else pout.print;
+	chains.map!(c => as.filter!(a => a.chainID == c))
+	      .joiner
+	      .map!((a) {
+		 a.chainID = cast(char)(ids[chains.indexOf(a.chainID)]);
+		 return a;})
+	      .print;
 }
