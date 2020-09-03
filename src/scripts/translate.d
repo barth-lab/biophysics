@@ -1,9 +1,10 @@
 #!/usr/bin/env rdmd
 
+import std.algorithm;
 import biophysics.pdb;
+
 auto translate(Range)(Range atoms, double x, double y, double z, string chain) {
 	import std.math;
-	import std.algorithm;
 
 	return atoms.map!((atom) {
 		if (!chain.canFind(atom.chainID)) return atom;
@@ -17,7 +18,7 @@ auto translate(Range)(Range atoms, double x, double y, double z, string chain) {
 
 void main(string[] args) {
 	import std.getopt;
-	import std.algorithm;
+	import std.stdio;
 
 	bool non = false;
 	double x,y,z;
@@ -29,9 +30,12 @@ void main(string[] args) {
 			  "z", "x-value", &z,
 			  "chain|c", "Chain to translate, default = all", &chain);
 
-	if (args.length != 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ __FILE__ ~ ":", opt.options);
+	if (args.length > 2 || opt.helpWanted) {
+		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
 		return;
 	}
-	parse(args[1], non).translate(x, y, z, chain).print;
+	auto file = (args.length == 2 ? File(args[1]) : stdin);
+
+	file.parse(non).translate(x, y, z, chain).print;
+
 }

@@ -5,6 +5,7 @@ void main(string[] args)
 {
 	import std.getopt;
 	import std.algorithm;
+	import std.stdio;
 	import biophysics.pdb;
 
 	bool non   = false;
@@ -13,9 +14,10 @@ void main(string[] args)
 			  "non_standard|n", "Use non-standard residued", &non,
 			  "start|s", "Start at this value", &start);
 
-	if (args.length != 2 || opt.helpWanted) {
+	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
 		return;
 	}
-	parse(args[1], non).renumber(start).print;
+	auto file = (args.length == 2 ? File(args[1]) : stdin);
+	file.parse(non).renumber(start).print;
 }

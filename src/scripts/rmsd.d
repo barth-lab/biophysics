@@ -29,13 +29,14 @@ void main(string[] args) {
 			  "non_standard|n", "Use non-standard residued", &non,
 			  "chain|c", "Chain to translate, default = all", &chain);
 
-	if (args.length != 3 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ __FILE__ ~ ":", opt.options);
+	if (args.length > 3 || args.length == 0 || opt.helpWanted) {
+		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
 		return;
 	}
-
-	auto pdb1 = parse(args[1], non).filter!(a => a.name == "CA");
-	auto pdb2 = parse(args[2], non).filter!(a => a.name == "CA");
+	auto file1 = File(args[1]);
+	auto file2 = (args.length == 3 ? File(args[2]) : stdin);
+	auto pdb1  = file1.parse(non).filter!(a => a.name == "CA");
+	auto pdb2  = file2.parse(non).filter!(a => a.name == "CA");
 
 	writefln("%+.3e", rmsd(pdb1, pdb2));
 }

@@ -44,14 +44,16 @@ void main(string[] args) {
 				"Residues to extract, default = 1-9999",
 				&residues);
 
-	if (args.length != 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ __FILE__ ~ ":", opt.options);
+	if (args.length > 2 || opt.helpWanted) {
+		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
 		return;
 	}
+	auto file = (args.length == 2 ? File(args[1]) : stdin);
+
 	if (ids.empty) ids=chains;
 
 	immutable resSeqs = str2index(residues);
-	auto as = parse(args[1], non)
+	auto as = file.parse(non)
 		       .filter!(a => chains.canFind(a.chainID))
 		       .filter!(a => resSeqs.canFind(a.resSeq))
 		       .map!dup

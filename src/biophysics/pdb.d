@@ -4,10 +4,10 @@ import std.algorithm;
 import std.conv;
 import std.format;
 import std.string;
+import std.stdio;
 
-auto parse(const ref string filename, bool heterogen=false) {
-	import std.stdio;
-	return File(filename).byLine.filter!( l =>
+auto parse(File file, bool heterogen=false) {
+	return file.byLine.filter!( l =>
 		l.hasLength && (l.isAtom || (heterogen && l.isHeterogen)));
 }
 
@@ -54,15 +54,6 @@ string ter(Atom a) {
 auto renumber(Range)(lazy Range atoms, uint start=1) {
 	import std.stdio;
 	import std.range;
-
-	/*immutable diff = start - atoms.front.resSeq;
-	writeln("diff: ", diff);
-	return atoms.map!((atom) {
-		immutable rs = atom.resSeq;
-		writeln("rs: ", rs);
-		atom.resSeq = rs + diff;
-		return atom;
-		});*/
 
 	uint old_number = 0;
 	start--;
