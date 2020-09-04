@@ -1,3 +1,9 @@
+/* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 module biophysics.pdb;
 
 import std.algorithm;
@@ -51,21 +57,12 @@ string ter(Atom a) {
 	return t.to!string;
 }
 
-auto renumber(Range)(lazy Range atoms, uint start=1) {
-	import std.stdio;
-	import std.range;
-
-	uint old_number = 0;
-	start--;
-
-	return atoms.map!((atom) {
-		if (atom.resSeq != old_number) {
-			old_number = atom.resSeq;
-			start++;
-		}
-		atom.resSeq = start;
-		return atom;
-	});
+double distance(const Atom a1, const Atom a2) {
+	import std.math;
+	immutable dx = a1.x - a2.x;
+	immutable dy = a1.y - a2.y;
+	immutable dz = a1.z - a2.z;
+	return sqrt(dx*dx + dy*dy + dz*dz);
 }
 
 bool hasLength(char[] l) { return l.length  == 80; }

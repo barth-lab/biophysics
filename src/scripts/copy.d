@@ -1,5 +1,13 @@
 #!/usr/bin/env rdmd
 
+/* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+module scripts.copy;
+
 void main(string[] args)
 {
 	import biophysics.pdb;
