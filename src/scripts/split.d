@@ -21,14 +21,13 @@ auto splitChains(Range)(lazy Range atoms, double dist = 4) {
 	uint old_number = 0;
 
 	return atoms.map!((atom) {
-
 		if (atom.resSeq != old_number) {
 			if (distance(atom, old) > dist) chain++;
 
 			old_number = atom.resSeq;
 			old        = atom;
 		}
-		atom.chainID = (chain < 'A' ? 'A' : chain);
+		atom.chainID = chain;
 
 		return atom;
 	});
