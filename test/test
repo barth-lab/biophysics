@@ -17,12 +17,12 @@ for f in input/*.pdb;do
 	name=${f#input/}
 	name=${name%.pdb}
 
-	../bin/copy $f | ediff output/${name}_copy.pdb 
+	../bin/parse $f | ediff output/${name}_parse.pdb 
 
 	../bin/renumber $f | ediff output/${name}_renumber.pdb 
 	../bin/renumber -s 10 $f | ediff output/${name}_renumber_10.pdb 
 
-	../bin/translate -x100 -c Z $f | ediff output/${name}_copy.pdb 
+	../bin/translate -x100 -c Z $f | ediff output/${name}_parse.pdb 
 	../bin/translate -x100 $f | ediff output/${name}_translate_x100.pdb 
 	../bin/translate -y-23 $f | ediff output/${name}_translate_y-23.pdb 
 	../bin/translate -z333 $f | ediff output/${name}_translate_z333.pdb 

@@ -33,15 +33,25 @@ auto splitChains(Range)(lazy Range atoms, double dist = 4) {
 	});
 }
 
-void main(string[] args)
-{
+immutable description=
+"Split chains from PDB-FILE and write to standard output.";
+
+void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
+
 	bool non = false;
-	auto opt = getopt(args, "non_standard|n", "Use non-standard residues", &non);
+	auto opt = getopt(args, "hetatm|n",
+			  "Use non-standard (HETATM) residues", &non);
 
 	if (args.length > 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		defaultGetoptPrinter(
+			"Usage: " ~ args[0]
+			~ " [OPTIONS]... [FILE]\n"
+			~ description
+			~ "\n\nWith no FILE, or when FILE is --,"
+			~ " read standard input.\n",
+			opt.options);
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);

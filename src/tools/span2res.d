@@ -8,6 +8,9 @@
 
 module tools.span2res;
 
+immutable description=
+"Extract residues outside of membrane from SPAN-FILE to standard output.";
+
 void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
@@ -18,19 +21,26 @@ void main(string[] args) {
 	import std.algorithm;
 
 	bool non = false;
-	bool inv = false;
-	auto opt = getopt(args,
-			  "non_standard|n", "Use non-standard residues", &non,
-			  "inverse|i", "Print residues outside spanning region", &inv);
+	bool ins = false;
+	auto opt = getopt(
+		args,
+		"hetatm|n", "Use non-standard residues", &non,
+		"inside|i", "Extract residues inside of membrane", &ins);
 
 	if (args.length > 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		defaultGetoptPrinter(
+			"Usage: " ~ args[0]
+			~ " [OPTIONS]... [FILE]\n"
+			~ description
+			~ "\n\nWith no FILE, or when FILE is --,"
+			~ " read standard input.\n",
+			opt.options);
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
 
 	char[] o;
-	if (!inv)
+	if (ins)
 		foreach (i, l; file.byLine.enumerate) {
 			if (i < 4) continue;	
 

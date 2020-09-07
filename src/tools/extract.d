@@ -26,6 +26,18 @@ auto str2index(string s) {
 	return index;
 }
 
+immutable description=
+"Extract chains and/or residues from PDB-FILE to standard output.";
+
+immutable extra =	
+"Declare chains as capital letters. For example to extract A, C and E use 
+--chains ACE.
+Declare chainIDs the same way.
+
+Declare residues as numbers, seperated by '-' and ','. For example, to
+extract residues 1 to 10, 13 and 15 to 20, use
+--residues 1-10,13,15-20.";
+
 void main(string[] args) {
 	import std.getopt;
 	import std.algorithm;
@@ -38,29 +50,41 @@ void main(string[] args) {
 	string ids      = "";
 	string chains   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	string residues = "1-9999";
-	auto opt        = getopt(args,
-				"non_standard|n",
-				"Use non-standard residued",
-				&non,
-				"chainIDs|i",
-				"Use these chainIDs instead of the original one",
-				&ids,
-				"chains|c",
-				"Chains to extract, default = all",
-				&chains,
-				"residues|r",
-				"Residues to extract, default = 1-9999",
-				&residues);
+
+	auto opt = getopt(
+		args,
+		"hetatm|n",
+		"Use non-standard (HETATM) residues",
+		&non,
+
+		"chains|c",
+		"CHAINS to extract, default = ABC...",
+		&chains,
+
+		"chainIDs|i",
+		"Use CHAINIDS instead of the original one, default = CHAINS",
+		&ids,
+
+		"residues|r",
+		"residues to extract, default = 1-9999.",
+		&residues);
 
 	if (args.length > 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		defaultGetoptPrinter(
+			"Usage: " ~ args[0]
+			~ " [OPTIONS]... [FILE]\n"
+			~ description
+			~ "\n\nWith no FILE, or when FILE is --,"
+			~ " read standard input.\n",
+			opt.options);
+		writeln("\n" ~ extra);
 		return;
 	}
-	auto file = (args.length == 2 ? File(args[1]) : stdin);
-
 	if (ids.empty) ids=chains;
 
 	immutable resSeqs = str2index(residues);
+	auto      file    = (args.length == 2 ? File(args[1]) : stdin);
+
 	auto as = file.parse(non)
 		       .filter!(a => chains.canFind(a.chainID))
 		       .filter!(a => resSeqs.canFind(a.resSeq))

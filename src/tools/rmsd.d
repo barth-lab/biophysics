@@ -25,19 +25,26 @@ double rmsd(R1, R2)(R1 atoms1, R2 atoms2) {
 	return sqrt(s)/l;
 }
 
+immutable description=
+"Calculate rmsd between PDB-FILE1 and PDB-FILE2 to standard output.";
+
 void main(string[] args) {
 	import std.getopt;
 	import std.algorithm;
 	import std.stdio;
 
 	bool non = false;
-	string chain = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	auto opt = getopt(args,
-			  "non_standard|n", "Use non-standard residued", &non,
-			  "chain|c", "Chain to translate, default = all", &chain);
+	auto opt = getopt(args, "hetatm|n",
+			  "Use non-standard (HETATM) residues", &non);
 
 	if (args.length > 3 || args.length == 0 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		defaultGetoptPrinter(
+			"Usage: " ~ args[0]
+			~ " [OPTIONS]... FILE1 [FILE2]\n"
+			~ description
+			~ "\n\nWith no FILE2, or when FILE2 is --,"
+			~ " read standard input.\n",
+			opt.options);
 		return;
 	}
 	auto file1 = File(args[1]);

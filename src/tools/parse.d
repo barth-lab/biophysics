@@ -8,16 +8,36 @@
 
 module tools.parse;
 
-void main(string[] args)
-{
+import std.getopt;
+string cmdLine(const Option[] opt, string fn) {
+	string s = "Usage: " ~ fn;
+	foreach (o; opt) {
+		s ~= " [" ~ o.optShort ~ "]";
+	}
+	return s;
+}
+
+immutable description=
+"Parse ATOM records from PDB-FILE to standard output.";
+
+void main(string[] args) {
 	import biophysics.pdb;
 	import std.getopt;
 	import std.stdio;
+	import std.range;
+
 	bool non = false;
-	auto opt = getopt(args, "non_standard|n", "Use non-standard residues", &non);
+	auto opt = getopt(args, "hetatm|n",
+			  "Use non-standard (HETATM) residues", &non);
 
 	if (args.length > 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		defaultGetoptPrinter(
+			"Usage: " ~ args[0]
+			~ " [OPTIONS]... [FILE]\n"
+			~ description
+			~ "\n\nWith no FILE, or when FILE is --,"
+			~ " read standard input.\n",
+			opt.options);
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);

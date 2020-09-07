@@ -28,6 +28,8 @@ auto renumber(Range)(lazy Range atoms, uint start=1) {
 	});
 }
 
+immutable description=
+"Renumber residues from PDB-FILE, starting at start, to standard output.";
 
 void main(string[] args)
 {
@@ -36,12 +38,20 @@ void main(string[] args)
 
 	bool non   = false;
 	uint start = 1;
-	auto opt = getopt(args,
-			  "non_standard|n", "Use non-standard residued", &non,
-			  "start|s", "Start at this value", &start);
+
+	auto opt = getopt(
+		args,
+		"hetatm|n", "Use non-standard (HETATM) residues", &non,
+		"start|s", "Start at this value", &start);
 
 	if (args.length > 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		defaultGetoptPrinter(
+			"Usage: " ~ args[0]
+			~ " [OPTIONS]... [FILE]\n"
+			~ description
+			~ "\n\nWith no FILE, or when FILE is --,"
+			~ " read standard input.\n",
+			opt.options);
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);

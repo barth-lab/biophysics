@@ -24,26 +24,35 @@ auto translate(Range)(Range atoms, double x, double y, double z, string chain) {
 	});
 }
 
+immutable description=
+"Translate chains of PDB-FILE in x, y, z and write to standard output.";
+
 void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
 
 	bool non = false;
 	double x,y,z;
-	string chain = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	auto opt = getopt(args,
-			  "non_standard|n", "Use non-standard residued", &non,
-			  "x", "x-value", &x,
-			  "y", "x-value", &y,
-			  "z", "x-value", &z,
-			  "chain|c", "Chain to translate, default = all", &chain);
+	string chains = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	auto opt = getopt(
+		args,
+		"hetatm|n", "Use non-standard (HETATM) residues", &non,
+		"x", "x-value", &x,
+		"y", "y-value", &y,
+		"z", "z-value", &z,
+		"chains|c", "Chains to translate, default = all", &chains);
 
 	if (args.length > 2 || opt.helpWanted) {
-		defaultGetoptPrinter("Usage of " ~ args[0] ~ ":", opt.options);
+		defaultGetoptPrinter(
+			"Usage: " ~ args[0]
+			~ " [OPTIONS]... [FILE]\n"
+			~ description
+			~ "\n\nWith no FILE, or when FILE is --,"
+			~ " read standard input.\n",
+			opt.options);
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
 
-	file.parse(non).translate(x, y, z, chain).print;
-
+	file.parse(non).translate(x, y, z, chains).print;
 }
