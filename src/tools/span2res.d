@@ -6,7 +6,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-module scripts.span2res;
+module tools.span2res;
 
 void main(string[] args) {
 	import std.getopt;

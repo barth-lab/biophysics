@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-for f in src/scripts/*.d; do
-	name=${f#src/scripts/}
+for f in src/tools/*.d; do
+	name=${f#src/tools/}
 	name=${name%.d}
 	echo $f bin/$name
 	dmd -I src/biophysics/pdb.d -O -release -inline -of=bin/$name -od=obj $f
