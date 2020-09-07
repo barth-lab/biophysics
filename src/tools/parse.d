@@ -1,4 +1,12 @@
-#!/usr/bin/env rdmd
+#!/usr/bin/env dub
+/+ dub.sdl:
+	name        "parse"
+	targetType  "executable"
+	targetPath  "../../bin"
+	targetName  "parse"
+	dependency "biophysics" version="*" path="../.."
+
++/
 
 /* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
  *
@@ -6,7 +14,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-module scripts.copy;
+module tools.parse;
 
 void main(string[] args)
 {
