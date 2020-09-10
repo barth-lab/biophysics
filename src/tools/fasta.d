@@ -11,26 +11,13 @@ module tools.fasta;
 immutable description=
 "Print Sequence of PDB-FILE in FASTA format to standard output.";
 
-immutable aa3 = ["CYS", "ASP", "SER", "GLN", "LYS", "ILE", "PRO",
-                 "THR", "PHE", "ASN", "GLY", "HIS", "LEU", "ARG", "TRP",
-                 "ALA", "VAL", "GLU", "TYR", "MET"];
-
-immutable aa1 = ['C', 'D', 'S', 'Q', 'K', 'I', 'P', 'T', 'F', 'N',
-                 'G', 'H', 'L', 'R', 'W', 'A','V', 'E', 'Y', 'M'];
-
 immutable char[string] aminoAcids; 
-
 shared static this() {
-	import std.exception : assumeUnique;
-	import std.conv : to;
-	import std.range;
-
-	char[string] temp; 
-	foreach(a1, a3; zip(aa1, aa3)) 
-		temp[a3] = a1.to!char;
-
-	temp.rehash; // for faster lookups
-	aminoAcids = assumeUnique(temp);
+	aminoAcids = ["CYS": 'C', "ASP": 'D', "SER": 'S', "GLN": 'Q',
+	              "LYS": 'K', "ILE": 'I', "PRO": 'P', "THR": 'T',
+		      "PHE": 'F', "ASN": 'N', "GLY": 'G', "HIS": 'H',
+		      "LEU": 'L', "ARG": 'R', "TRP": 'W', "ALA": 'A',
+		      "VAL":'V', "GLU": 'E', "TYR": 'Y', "MET": 'M'];
 }
 
 string fasta(Range)(Range atoms, string fn) {
