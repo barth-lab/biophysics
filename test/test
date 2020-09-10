@@ -27,8 +27,10 @@ for f in input/*.pdb;do
 	../bin/translate -y-23 $f | ediff output/${name}_translate_y-23.pdb 
 	../bin/translate -z333 $f | ediff output/${name}_translate_z333.pdb 
 	../bin/translate -x1 -y2 -z3 $f | ediff output/${name}_translate_x1_y2_z3.pdb 
+
 	../bin/extract -c A $f | ediff output/${name}_A.pdb
 
+	../bin/fasta $f | ediff output/$name.fasta
 done
 
 f=input/3zev.pdb
