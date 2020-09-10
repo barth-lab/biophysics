@@ -15,17 +15,28 @@ immutable aa3 = ["CYS", "ASP", "SER", "GLN", "LYS", "ILE", "PRO",
                  "THR", "PHE", "ASN", "GLY", "HIS", "LEU", "ARG", "TRP",
                  "ALA", "VAL", "GLU", "TYR", "MET"];
 
-immutable char[] aa1 = ['C', 'D', 'S', 'Q', 'K', 'I', 'P', 'T', 'F', 'N',
+immutable aa1 = ['C', 'D', 'S', 'Q', 'K', 'I', 'P', 'T', 'F', 'N',
                  'G', 'H', 'L', 'R', 'W', 'A','V', 'E', 'Y', 'M'];
+
+immutable char[string] aminoAcids; 
+
+shared static this() {
+	import std.exception : assumeUnique;
+	import std.conv : to;
+	import std.range;
+
+	char[string] temp; 
+	foreach(a1, a3; zip(aa1, aa3)) 
+		temp[a3] = a1.to!char;
+
+	temp.rehash; // for faster lookups
+	aminoAcids = assumeUnique(temp);
+}
 
 string fasta(Range)(Range atoms, string fn) {
 	import biophysics.pdb;
-	import std.range;
 	import std.algorithm;
-
-	dchar[string] aa;
-	foreach (a1, a3; zip(aa1, aa3)) 
-		aa[a3] = a1;	
+	import std.array;
 
 	fn          = fn.split('/')[$ - 1].split(".pdb")[0];
 	char chain  = atoms.front.chainID;
@@ -46,7 +57,7 @@ string fasta(Range)(Range atoms, string fn) {
 		if (resNum == a.resSeq) continue;
 		resNum = a.resSeq;
 
-		if (a.resName in aa) sout ~= aa[a.resName];
+		if (auto aa1 = a.resName in aminoAcids) sout ~= *aa1;
 		else sout ~= 'X';
 
 		counter++;
