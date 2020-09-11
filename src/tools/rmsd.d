@@ -13,8 +13,10 @@ import biophysics.pdb;
 double rmsd(R1, R2)(R1 atoms1, R2 atoms2) {
 	import std.range;
 	import std.math;
+
 	double s = 0;
 	int    l = 0;
+
 	foreach (a1, a2; zip(atoms1, atoms2)) {
 		immutable dx = a1.x - a2.x;	
 		immutable dy = a1.y - a2.y;	

@@ -11,10 +11,7 @@ module tools.renumber;
 import std.algorithm;
 import biophysics.pdb;
 
-auto renumber(Range)(lazy Range atoms, uint start=1) {
-	import std.stdio;
-	import std.range;
-
+auto renumber(Range)(Range atoms, uint start=1) {
 	uint old_number = 0;
 	start--;
 
@@ -31,15 +28,13 @@ auto renumber(Range)(lazy Range atoms, uint start=1) {
 immutable description=
 "Renumber residues from PDB-FILE, starting at start, to standard output.";
 
-void main(string[] args)
-{
+void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
 
 	bool non   = false;
 	uint start = 1;
-
-	auto opt = getopt(
+	auto opt   = getopt(
 		args,
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
 		"start|s", "Start at this value", &start);

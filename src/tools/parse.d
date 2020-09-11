@@ -8,15 +8,6 @@
 
 module tools.parse;
 
-import std.getopt;
-string cmdLine(const Option[] opt, string fn) {
-	string s = "Usage: " ~ fn;
-	foreach (o; opt) {
-		s ~= " [" ~ o.optShort ~ "]";
-	}
-	return s;
-}
-
 immutable description=
 "Parse ATOM records from PDB-FILE to standard output.";
 
@@ -24,7 +15,6 @@ void main(string[] args) {
 	import biophysics.pdb;
 	import std.getopt;
 	import std.stdio;
-	import std.range;
 
 	bool non = false;
 	auto opt = getopt(args, "hetatm|n",
@@ -41,5 +31,5 @@ void main(string[] args) {
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	file.parse.print;
+	file.parse(non).print;
 }

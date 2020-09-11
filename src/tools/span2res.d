@@ -39,16 +39,18 @@ void main(string[] args) {
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
 
-	char[] o;
-	if (ins)
+	string res;
+	if (ins) {
 		foreach (i, l; file.byLine.enumerate) {
 			if (i < 4) continue;	
 
 			auto sp = l.splitter;
-			o ~= sp.front ~ '-';
+			res ~= sp.front ~ '-';
 			sp.popFront;
-			o ~= sp.front ~ ','; 
+			res ~= sp.front ~ ','; 
 		}
+		res = res[0 .. $ - 1];
+	}
 	else {
 		string start = "1";
 		foreach (i, l; file.byLine.enumerate) {
@@ -56,12 +58,12 @@ void main(string[] args) {
 
 			auto sp = l.splitter;
 			immutable stop = (sp.front.to!int - 1).to!string;
-			o ~= start ~ '-' ~ stop ~ ','; 
+			res ~= start ~ '-' ~ stop ~ ','; 
 			sp.popFront;
 			start = (sp.front.to!int + 1).to!string;
 		}
-		o ~= start ~ "-9999,";
+		res ~= start ~ "-9999";
 		
 	}
-	o[0 .. $-1].writeln;
+	res.writeln;
 }
