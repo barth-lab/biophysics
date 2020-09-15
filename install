@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 for f in tools/*.d; do
-	dub build --single $f
+	dub build --build=release --single $f
 done
