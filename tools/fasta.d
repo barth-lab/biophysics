@@ -1,4 +1,11 @@
-#!/usr/bin/env rdmd
+#!/usr/bin/env dub
+/+ dub.sdl:
+	name        "fasta"
+	targetType  "executable"
+	targetPath  "../bin"
+	targetName  "fasta"
+	dependency "biophysics" version="*" path=".."
++/
 
 /* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
  *

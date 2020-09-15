@@ -1,4 +1,11 @@
-#!/usr/bin/env rdmd
+#!/usr/bin/env dub
+/+ dub.sdl:
+	name        "span2res"
+	targetType  "executable"
+	targetPath  "../bin"
+	targetName  "span2res"
+	dependency "biophysics" version="*" path=".."
++/
 
 /* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
  *

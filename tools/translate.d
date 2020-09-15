@@ -1,4 +1,11 @@
-#!/usr/bin/env rdmd
+#!/usr/bin/env dub
+/+ dub.sdl:
+	name        "translate"
+	targetType  "executable"
+	targetPath  "../bin"
+	targetName  "translate"
+	dependency "biophysics" version="*" path=".."
++/
 
 /* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
  *
@@ -6,38 +13,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-module tools.renumber;
+module tools.translate;
 
 import std.algorithm;
 import biophysics.pdb;
 
-auto renumber(Range)(Range atoms, uint start=1) {
-	uint old_number = 0;
-	start--;
+auto translate(Range)(Range atoms, double x, double y, double z, string chain) {
+	import std.math;
 
 	return atoms.map!((atom) {
-		if (atom.resSeq != old_number) {
-			old_number = atom.resSeq;
-			start++;
-		}
-		atom.resSeq = start;
+		if (!chain.canFind(atom.chainID)) return atom;
+
+		if (!x.isNaN) atom.x = atom.x + x;
+		if (!y.isNaN) atom.y = atom.y + y;
+		if (!z.isNaN) atom.z = atom.z + z;
 		return atom;
 	});
 }
 
 immutable description=
-"Renumber residues from PDB-FILE, starting at start, to standard output.";
+"Translate chains of PDB-FILE in x, y, z and write to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
 
-	bool non   = false;
-	uint start = 1;
-	auto opt   = getopt(
+	bool non = false;
+	double x,y,z;
+	string chains = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
-		"start|s", "Start at this value", &start);
+		"x", "x-value", &x,
+		"y", "y-value", &y,
+		"z", "z-value", &z,
+		"chains|c", "Chains to translate, default = all", &chains);
 
 	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -50,5 +60,6 @@ void main(string[] args) {
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	file.parse(non).renumber(start).print;
+
+	file.parse(non).translate(x, y, z, chains).print;
 }
