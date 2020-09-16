@@ -1,0 +1,27 @@
+* biophysics
+Library and tools for parsing and modifying biophysical files. 
+* Usage
+** Clone a Copy
+   #+BEGIN_SRC
+$ git clone https://github.com/glis-glis/biophysics.git
+   #+END_SRC
+** Compile Binaries
+   #+BEGIN_SRC
+$ ./install
+   #+END_SRC
+** Tools
+   All tools are in the ~bin~ folder and the corresponding source file
+   in the ~tools~ folder. Each tool has a help, which can be evoked
+   by ~bin/script --help~
+* Design Choices
+** Do One Thing and Do It Well
+   Each tool can only do one thing, but does it very fast. Tools can
+   be piped together to achieve more complicated operations
+** Data is Flat
+   Even though a protein can be viewed as a tree (a protein consists
+   of chains, a chain consists of residues, a residue consists of
+   atoms), the internal representation is a flat table of atoms. This
+   helps for data locality and makes lazy data easier.
+** Lazy data
+   Data is handled lazily, that is, it is only evaluated when needed,
+   for example when printing.
