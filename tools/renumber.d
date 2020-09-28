@@ -18,8 +18,10 @@ module tools.renumber;
 import std.algorithm;
 import biophysics.pdb;
 
-auto renumber(Range)(Range atoms, uint start=1) {
+auto renumber(Range)(Range atoms, uint start=1, bool rechain=false) {
 	uint old_number = 0;
+	char old_chain  = ' ';
+	char chain      = 'A' - 1;
 	start--;
 
 	return atoms.map!((atom) {
@@ -27,6 +29,12 @@ auto renumber(Range)(Range atoms, uint start=1) {
 			old_number = atom.resSeq;
 			start++;
 		}
+		if (rechain && (atom.chainID != old_chain)) {
+			old_chain = atom.chainID;
+			chain++;	
+		}
+		if (rechain) atom.chainID = chain;
+
 		atom.resSeq = start;
 		return atom;
 	});
@@ -39,11 +47,13 @@ void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
 
-	bool non   = false;
-	uint start = 1;
-	auto opt   = getopt(
+	bool non     = false;
+	uint start   = 1;
+	bool rechain =false;
+	auto opt     = getopt(
 		args,
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
+		"rechain|c", "Renumber chains A through Z", &rechain,
 		"start|s", "Start at this value", &start);
 
 	if (args.length > 2 || opt.helpWanted) {
@@ -57,5 +67,5 @@ void main(string[] args) {
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	file.parse(non).renumber(start).print;
+	file.parse(non).renumber(start, rechain).print;
 }
