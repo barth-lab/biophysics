@@ -31,20 +31,29 @@ double rmsd(R1, R2)(R1 atoms1, R2 atoms2) {
 		s += dx*dx + dy*dy + dz*dz;
 		l++;
 	}
-	return sqrt(s)/l;
+	return sqrt(s/l);
 }
 
 immutable description=
-"Calculate rmsd between PDB-FILE1 and PDB-FILE2 to standard output.";
+"Calculate CA-rmsd between PDB-FILE1 and PDB-FILE2 to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
 	import std.algorithm;
 	import std.stdio;
 
-	bool non = false;
-	auto opt = getopt(args, "hetatm|n",
-			  "Use non-standard (HETATM) residues", &non);
+	bool   non    = false;
+	string chains = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	auto opt = getopt(
+		args,
+		"hetatm|n",
+		"Use non-standard (HETATM) residues",
+		&non,
+
+		"chains|c",
+		"CHAINS to use, default = all",
+		&chains);
 
 	if (args.length > 3 || args.length == 0 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -58,8 +67,13 @@ void main(string[] args) {
 	}
 	auto file1 = File(args[1]);
 	auto file2 = (args.length == 3 ? File(args[2]) : stdin);
-	auto pdb1  = file1.parse(non).filter!(a => a.name == "CA");
-	auto pdb2  = file2.parse(non).filter!(a => a.name == "CA");
+
+	auto pdb1 = file1.parse(non)
+		          .filter!(a => (non && a.isHeterogen) || a.name == "CA")
+	                  .filter!(a => chains.canFind(a.chainID));
+	auto pdb2  = file2.parse(non)
+		          .filter!(a => (non && a.isHeterogen) || a.name == "CA")
+	                  .filter!(a => chains.canFind(a.chainID));
 
 	writefln("%+.3e", rmsd(pdb1, pdb2));
 }
