@@ -79,11 +79,9 @@ void main(string[] args) {
 	file.parse(non)
 	    .map!((a){
 		if (resSeqs.canFind(a.resSeq)) {
-			a.x = 0;
-			a.y = 0;
-			a.z = 0;
-
-			a.occupancy = -1;
+			a.x = a.x + 1000;
+			a.y = a.y + 1000;
+			a.z = a.z + 1000;
 		}
 		return a;})
 	    .print;

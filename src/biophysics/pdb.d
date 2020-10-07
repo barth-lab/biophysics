@@ -123,6 +123,8 @@ void element(Atom atom, string value){ atom[76 .. 78] = value.format!"%2s"; }
 string charge(const Atom atom) { return atom[78 .. 80].strip.to!string; }
 void charge(Atom atom, string value){ atom[78 .. 80] = value.format!"%2s"; }
 
+bool isH(const Atom atom) { return atom[13] == 'H';}
+
 unittest {
 	char[80] buf = "ATOM      2  CA  PRO A  51     -36.257  41.614 -51.758  1.00150.96           C  ";
 
