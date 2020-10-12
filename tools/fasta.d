@@ -43,10 +43,11 @@ string fasta(Range)(Range atoms, string fn, bool showGaps = true) {
 		if (a.chainID != chain) {
 			chain = a.chainID;
 			counter = 0;
+			resNum  = 0;
 			sout ~= "\n>" ~ fn ~ '_' ~ chain ~ '\n';
 		}
 		resNum++;
-		while (resNum != a.resSeq) {
+		while (resNum < a.resSeq) {
 			sout ~= '-';
 			resNum++;
 			if (++counter >= 70) {
