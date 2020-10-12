@@ -27,7 +27,7 @@ shared static this() {
 		      "VAL":'V', "GLU": 'E', "TYR": 'Y', "MET": 'M'];
 }
 
-string fasta(Range)(Range atoms, string fn, bool showGaps = true) {
+string fasta(Range)(Range atoms, string fn, bool showGaps) {
 	import biophysics.pdb;
 	import std.algorithm;
 	import std.array;
@@ -46,8 +46,8 @@ string fasta(Range)(Range atoms, string fn, bool showGaps = true) {
 			resNum  = 0;
 			sout ~= "\n>" ~ fn ~ '_' ~ chain ~ '\n';
 		}
-		resNum++;
-		while (resNum < a.resSeq) {
+		resNum = (showGaps ? resNum + 1 : a.resSeq);
+		while (showGaps && resNum < a.resSeq) {
 			sout ~= '-';
 			resNum++;
 			if (++counter >= 70) {
@@ -70,9 +70,18 @@ void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
 
-	bool non = false;
-	auto opt = getopt(args, "hetatm|n",
-			  "Use non-standard (HETATM) residues", &non);
+	bool non      = false;
+	bool showGaps = false;
+
+	auto opt = getopt(
+		args,
+		"hetatm|n",
+		"Use non-standard (HETATM) residues",
+		&non,
+
+		"show_gaps|s",
+		"Indicate SeqNum jumps by '-'",
+		&showGaps);
 
 	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -87,5 +96,5 @@ void main(string[] args) {
 	immutable hasFile = args.length == 2;
 	immutable fn      = (hasFile ? args[1] : "");
 	auto      file    = (hasFile ? File(fn) : stdin);
-	file.parse(non).fasta(fn).writeln;
+	file.parse(non).fasta(fn, showGaps).writeln;
 }
