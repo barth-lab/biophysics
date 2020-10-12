@@ -32,7 +32,7 @@ for f in input/*.pdb;do
 
 	../bin/fasta $f | ediff output/$name.fasta
 
-	if [[ `../bin/rmsd $f output/${name}_translate_x100.pdb` != "+1.001e+02" ]]; then
+	if [[ `../bin/rmsd $f output/${name}_translate_x100.pdb` != "+1.000e+02" ]]; then
 		echo "rmsd error" 1>&2 
 	fi
 done
