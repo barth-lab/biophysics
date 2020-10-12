@@ -1,9 +1,9 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
-	name        "rm_res"
+	name        "remove"
 	targetType  "executable"
 	targetPath  "../bin"
-	targetName  "rm_res"
+	targetName  "remove"
 	dependency "biophysics" version="*" path=".."
 +/
 
@@ -76,13 +76,21 @@ void main(string[] args) {
 	immutable resSeqs = str2index(residues);
 	auto      file    = (args.length == 2 ? File(args[1]) : stdin);
 
-	file.parse(non)
+	/+ file.parse(non)
 	    .map!((a){
 		if (resSeqs.canFind(a.resSeq)) {
-			a.x = a.x + 1000;
+			/*a.x = a.x + 1000;
 			a.y = a.y + 1000;
-			a.z = a.z + 1000;
+			a.z = a.z + 1000;*/
+			a.x = 0;
+			a.y = 0;
+			a.z = 0;
+			a.occupancy = -1;
 		}
 		return a;})
+	    .print; +/
+
+	file.parse(non)
+	    .filter!(a => !resSeqs.canFind(a.resSeq))
 	    .print;
 }
