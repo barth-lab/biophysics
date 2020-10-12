@@ -27,7 +27,7 @@ shared static this() {
 		      "VAL":'V', "GLU": 'E', "TYR": 'Y', "MET": 'M'];
 }
 
-string fasta(Range)(Range atoms, string fn) {
+string fasta(Range)(Range atoms, string fn, bool showGaps = true) {
 	import biophysics.pdb;
 	import std.algorithm;
 	import std.array;
@@ -39,22 +39,27 @@ string fasta(Range)(Range atoms, string fn) {
 	int resNum  = 0;
 
 	foreach (a; atoms) {
+		if (resNum == a.resSeq) continue;
 		if (a.chainID != chain) {
 			chain = a.chainID;
 			counter = 0;
 			sout ~= "\n>" ~ fn ~ '_' ~ chain ~ '\n';
 		}
-		if (counter >= 70) {
+		resNum++;
+		while (resNum != a.resSeq) {
+			sout ~= '-';
+			resNum++;
+			if (++counter >= 70) {
+				sout   ~= '\n';
+				counter = 0;
+			}
+		}
+		if (auto aa = a.resName in aminoAcids) sout ~= *aa;
+		else sout ~= 'X';
+		if (++counter >= 70) {
 			sout   ~= '\n';
 			counter = 0;
 		}
-		if (resNum == a.resSeq) continue;
-		resNum = a.resSeq;
-
-		if (auto aa1 = a.resName in aminoAcids) sout ~= *aa1;
-		else sout ~= 'X';
-
-		counter++;
 	}
 	return sout;
 }
