@@ -23,6 +23,7 @@ void main(string[] args) {
 	import biophysics.fasta;
 	import std.getopt;
 	import std.stdio;
+	import std.string;
 
 	bool non      = false;
 	bool showGaps = false;
@@ -48,7 +49,7 @@ void main(string[] args) {
 		return;
 	}
 	immutable hasFile = args.length == 2;
-	immutable fn      = (hasFile ? args[1] : "");
-	auto      file    = (hasFile ? File(fn) : stdin);
-	file.parse(non).fasta(fn, showGaps).writeln;
+	immutable name    = (hasFile ? args[1].split('/')[$ - 1].split(".pdb")[0] : "");
+	auto      file    = (hasFile ? File(args[1]) : stdin);
+	file.parse(non).fasta(showGaps).print(name);
 }

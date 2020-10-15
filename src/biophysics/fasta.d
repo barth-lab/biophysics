@@ -6,6 +6,8 @@
 
 module biophysics.fasta;
 
+import std.stdio;
+
 immutable char[string] aminoAcids; 
 shared static this() {
 	aminoAcids = ["CYS": 'C', "ASP": 'D', "SER": 'S', "GLN": 'Q',
@@ -15,40 +17,63 @@ shared static this() {
 		      "VAL":'V', "GLU": 'E', "TYR": 'Y', "MET": 'M'];
 }
 
-string fasta(Range)(Range atoms, string fn, bool showGaps) {
+string[char] fasta(Range)(Range atoms, bool showGaps) {
 	import biophysics.pdb;
 	import std.algorithm;
 	import std.array;
 
-	fn          = fn.split('/')[$ - 1].split(".pdb")[0];
-	char chain  = atoms.front.chainID;
-	string sout = '>' ~ fn ~ '_' ~ chain ~ '\n';
-	int counter = 0;
-	int resNum  = 0;
+	string[char] chains;
+	char ch    = atoms.front.chainID;
+	chains[ch] = "";
+	int resNum = 0;
 
 	foreach (a; atoms) {
 		if (resNum == a.resSeq) continue;
-		if (a.chainID != chain) {
-			chain = a.chainID;
-			counter = 0;
-			resNum  = 0;
-			sout ~= "\n>" ~ fn ~ '_' ~ chain ~ '\n';
+		if (a.chainID != ch) {
+			ch     = a.chainID;
+			resNum = 0;
+			chains.require(ch, "");
 		}
 		resNum = (showGaps ? resNum + 1 : a.resSeq);
 		while (showGaps && resNum < a.resSeq) {
-			sout ~= '-';
+			chains[ch] ~= '-';
 			resNum++;
-			if (++counter >= 70) {
-				sout   ~= '\n';
-				counter = 0;
-			}
 		}
-		if (auto aa = a.resName in aminoAcids) sout ~= *aa;
-		else sout ~= 'X';
-		if (++counter >= 70) {
-			sout   ~= '\n';
-			counter = 0;
+		if (auto aa = a.resName in aminoAcids) chains[ch] ~= *aa;
+		else chains[ch] ~= 'X';
+	}
+	return chains;
+}
+
+string[char] fasta(File file) {
+	import std.algorithm;
+	import std.string;
+	string[char] chains;
+	char ch = void;
+	foreach (l; file.byLine) {
+		if (l.startsWith('>')) {
+			ch = l.strip[$ - 1];	
+			chains[ch]   = "";
+		}
+		else {
+			chains[ch] ~= l.strip;
 		}
 	}
-	return sout;
+	return chains;
+}
+
+void print(string[char] fasta, string name) {
+	import std.algorithm;
+	import std.string;
+	if (!name.empty) name ~= "_";
+
+	foreach (key; sort(cast(ubyte[])fasta.keys)) {
+		writeln('>', name, cast(char)key);
+		auto s = fasta[key];
+		while (s.length > 70) {
+			s[0 .. 70].writeln;
+			s = s[70 .. $];
+		}
+		s.writeln;
+	}
 }
