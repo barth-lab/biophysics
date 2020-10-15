@@ -53,7 +53,7 @@ string[char] fasta(File file) {
 	foreach (l; file.byLine) {
 		if (l.startsWith('>')) {
 			ch = l.strip[$ - 1];	
-			chains[ch]   = "";
+			chains.require(ch, "");
 		}
 		else {
 			chains[ch] ~= l.strip;
@@ -67,8 +67,8 @@ void print(string[char] fasta, string name) {
 	import std.string;
 	if (!name.empty) name ~= "_";
 
-	foreach (key; sort(cast(ubyte[])fasta.keys)) {
-		writeln('>', name, cast(char)key);
+	foreach (char key; fasta.keys.representation.sort) {
+		writeln('>', name, key);
 		auto s = fasta[key];
 		while (s.length > 70) {
 			s[0 .. 70].writeln;
