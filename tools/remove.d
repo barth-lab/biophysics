@@ -50,6 +50,7 @@ void main(string[] args) {
 	import biophysics.pdb;
 
 	bool   non      = false;
+	bool   set0     = false;
 	string residues = "";
 
 	auto opt = getopt(
@@ -57,6 +58,10 @@ void main(string[] args) {
 		"hetatm|n",
 		"Use non-standard (HETATM) residues",
 		&non,
+
+		"set0|0",
+		"Retain residues, mutate to GLY, set occupancy to -1 and pos to 0,0,0",
+		&set0,
 
 		"residues|r",
 		"residues to extract.",
@@ -76,21 +81,28 @@ void main(string[] args) {
 	immutable resSeqs = str2index(residues);
 	auto      file    = (args.length == 2 ? File(args[1]) : stdin);
 
-	/+ file.parse(non)
-	    .map!((a){
-		if (resSeqs.canFind(a.resSeq)) {
-			/*a.x = a.x + 1000;
-			a.y = a.y + 1000;
-			a.z = a.z + 1000;*/
-			a.x = 0;
-			a.y = 0;
-			a.z = 0;
-			a.occupancy = -1;
-		}
-		return a;})
-	    .print; +/
-
-	file.parse(non)
-	    .filter!(a => !resSeqs.canFind(a.resSeq))
-	    .print;
+	if (set0) {
+		immutable BB = ["N", "CA", "C", "O"];
+		file.parse(non)
+		    .map!((a){
+			if (resSeqs.canFind(a.resSeq)) {
+				a.x = 0;
+				a.y = 0;
+				a.z = 0;
+				a.resName = "GLY";
+				a.occupancy = -1;
+			}
+			return a;})
+		    .filter!((a){
+			if (a.occupancy != -1) return true;
+			if (BB.canFind(a.name)) return true;
+			return false;
+			})
+		    .print; 
+	}
+	else {
+		file.parse(non)
+		    .filter!(a => !resSeqs.canFind(a.resSeq))
+		    .print;
+	}
 }
