@@ -16,16 +16,16 @@
 module tools.fasta;
 
 import biophysics.pdb;
+import biophysics.fasta;
 
 void print_fill(Range)(Range atoms, string res) {
 	import std.stdio;
 	import std.range;
 
 	auto atom = atoms.front;
-
-	char ch = atom.chainID;
-	int  ai = 1;
-	int  ri = 1;
+	char ch   = atom.chainID;
+	int  ai   = 1;
+	int  ri   = 1;
 	char[80] old;
 
 	for(;;) {
@@ -38,12 +38,27 @@ void print_fill(Range)(Range atoms, string res) {
 			ri++;
 		}
 		while (ri < atom.resSeq) {
-			writeln("insert ", res[ri-1], ri, " here");
+			if (res[ri-1] == '-') {
+				ri++;
+				continue;
+			}
+			old.x = 0;
+			old.y = 0;
+			old.z = 0;
+			old.occupancy  = -1;
+			old.tempFactor = 0;
+			foreach (a; ["N", "CA", "C", "O"]) {
+				old.name = a;	
+				old.resName = res[ri-1].aminoAcids;
+				old.resSeq  = ri;
+				old.serial  = ai++;
+				old.element = a[0 .. 1];
+				writefln("%-80s", old);
+			}
 			ri++;
 		} 
 		atom.serial = ai++;
 		old         = atom;
-
 		writefln("%-80s", atom);
 		
 		atoms.popFront;
@@ -52,7 +67,6 @@ void print_fill(Range)(Range atoms, string res) {
 		}
 		atom = atoms.front;
 	} 
-
 	old.serial = ai++;
 	old[0..$].ter.writeln;
 	writefln("%-80s", "END");
@@ -62,7 +76,6 @@ immutable description=
 "Insert missing residues definen in FASA-file to PDB-FILE to standard output.";
 
 void main(string[] args) {
-	import biophysics.fasta;
 	import std.getopt;
 	import std.stdio;
 	import std.algorithm;

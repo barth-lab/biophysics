@@ -8,13 +8,25 @@ module biophysics.fasta;
 
 import std.stdio;
 
-immutable char[string] aminoAcids; 
-shared static this() {
-	aminoAcids = ["CYS": 'C', "ASP": 'D', "SER": 'S', "GLN": 'Q',
-	              "LYS": 'K', "ILE": 'I', "PRO": 'P', "THR": 'T',
-		      "PHE": 'F', "ASN": 'N', "GLY": 'G', "HIS": 'H',
-		      "LEU": 'L', "ARG": 'R', "TRP": 'W', "ALA": 'A',
-		      "VAL":'V', "GLU": 'E', "TYR": 'Y', "MET": 'M'];
+
+char aminoAcids(string threeLetter) {
+	immutable aminoAcids = ["CYS": 'C', "ASP": 'D', "SER": 'S', "GLN": 'Q',
+			    "LYS": 'K', "ILE": 'I', "PRO": 'P', "THR": 'T',
+			    "PHE": 'F', "ASN": 'N', "GLY": 'G', "HIS": 'H',
+			    "LEU": 'L', "ARG": 'R', "TRP": 'W', "ALA": 'A',
+			    "VAL":'V', "GLU": 'E', "TYR": 'Y', "MET": 'M'];
+	if (auto aa = threeLetter in aminoAcids) return *aa;
+	return 'X';
+}
+
+string aminoAcids(char oneLetter) {
+	immutable aminoAcids = ['C': "CYS", 'D': "ASP", 'S': "SER", 'Q': "GLN",
+				'K': "LYS", 'I': "ILE", 'P': "PRO", 'T': "THR",
+				'F': "PHE", 'N': "ASN", 'G': "GLY", 'H': "HIS",
+				'L': "LEU", 'R': "ARG", 'W': "TRP", 'A': "ALA",
+				'V': "VAL", 'E': "GLU", 'Y': "TYR", 'M': "MET"];
+	if (auto aa = oneLetter in aminoAcids) return *aa;
+	return "X00";
 }
 
 string[char] fasta(Range)(Range atoms, bool showGaps) {
@@ -39,8 +51,7 @@ string[char] fasta(Range)(Range atoms, bool showGaps) {
 			chains[ch] ~= '-';
 			resNum++;
 		}
-		if (auto aa = a.resName in aminoAcids) chains[ch] ~= *aa;
-		else chains[ch] ~= 'X';
+		chains[ch] ~= aminoAcids(a.resName);
 	}
 	return chains;
 }
