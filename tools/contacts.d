@@ -22,8 +22,8 @@ auto contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
 	import std.format;
 	import std.conv;
 	import std.string;
-	string[] contacts;
 
+	double[string] contacts;
 	double[3][] coords2;
 	int[] resSeq2;
 	char[] chain2;
@@ -36,22 +36,18 @@ auto contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
 
 	foreach (a1; atoms1) {
 		immutable double[3] c1 = [a1.x, a1.y, a1.z];
-		immutable ch1 = a1.chainID;
-		immutable resSeq1 = a1[22 .. 26].strip.to!string;
-		int resSeq = 0;
+		immutable key1    =  format("%c%04d",a1.chainID, a1.resSeq);
+		int       resSkip = 0;
 		foreach (j; 0 .. coords2.length) {
-			if (resSeq2[j] == resSeq) continue;
+			if (resSeq2[j] == resSkip) continue;
 
 			immutable d = c1.distance(coords2[j]);
-			if (d > cut_off + 15) resSeq = resSeq2[j];
+			if (d > cut_off + 15) resSkip = resSeq2[j];
 			if (d > cut_off) continue;
-			contacts ~= ch1
-				~ resSeq1
-				~ "-"
-				~ chain2[j]
-				~ resSeq2[j].to!string
-				~ ": "
-				~ d.format!"%4.1f";
+			immutable key = format("%s-%c%04d", key1, chain2[j],
+			                       resSeq2[j]);
+			auto dh = contacts.require(key, d);
+			if (dh > d) contacts[key] = d;
 		}
 	}
 	return contacts;
@@ -67,8 +63,6 @@ void main(string[] args) {
 	import std.array;
 
 	bool   non    = false;
-	char   ch1    = 'A';
-	char   ch2    = 'B';
 	double cutoff = 4.;
 
 	auto opt = getopt(
@@ -79,34 +73,28 @@ void main(string[] args) {
 
 		"cutoff|c",
 		"Contact cutoff, default = 4A",
-		&cutoff,
+		&cutoff);
 
-		"chain1|1",
-		"First chain to calculate contact",
-		&ch1,
-
-		"chain2|2",
-		"Second chain to calculate contact",
-		&ch2);
-
-	if (args.length > 2 || opt.helpWanted) {
+	if (args.length > 3 || args.length == 0 || opt.helpWanted) {
 		defaultGetoptPrinter(
 			"Usage: " ~ args[0]
-			~ " [OPTIONS]... [FILE]\n"
+			~ " [OPTIONS]... FILE1 [FILE2]\n"
 			~ description
-			~ "\n\nWith no FILE, or when FILE is --,"
+			~ "\n\nWith no FILE2, or when FILE2 is --,"
 			~ " read standard input.\n",
 			opt.options);
 		return;
 	}
 
-	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	auto pdb  = file.parse(non)
-	                .filter!(a => a.chainID == ch1 || a.chainID == ch2)
-	                .filter!(a => !a.isH)
-	                .map!dup
-	                .array;
-	auto chain1 = pdb.filter!(a => a.chainID == ch1);
-	auto chain2 = pdb.filter!(a => a.chainID == ch2);
-	contacts(chain1, chain2, cutoff).each!writeln;
+	auto file1 = File(args[1]);
+	auto file2 = (args.length == 3 ? File(args[2]) : stdin);
+
+	auto pdb1 = file1.parse(non).filter!(a => !a.isH);
+	auto pdb2 = file2.parse(non).filter!(a => !a.isH);
+
+	auto cs = contacts(pdb1, pdb2, cutoff);
+
+	foreach (k, v; cs) {
+		writefln("%s: %5.2f", k, v);
+	}
 }
