@@ -23,20 +23,33 @@ auto contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
 	import std.conv;
 	import std.string;
 	string[] contacts;
-	int resSeq = 0;
+
+	double[3][] coords2;
+	int[] resSeq2;
+	char[] chain2;
+	
+	foreach (a2; atoms2) {
+		coords2 ~= [a2.x, a2.y, a2.z];
+		resSeq2 ~= a2.resSeq;
+		chain2  ~= a2.chainID;
+	}
 
 	foreach (a1; atoms1) {
-		foreach (a2; atoms2) {
-			if (a2.resSeq == resSeq) continue;
+		immutable double[3] c1 = [a1.x, a1.y, a1.z];
+		immutable ch1 = a1.chainID;
+		immutable resSeq1 = a1[22 .. 26].strip.to!string;
+		int resSeq = 0;
+		foreach (j; 0 .. coords2.length) {
+			if (resSeq2[j] == resSeq) continue;
 
-			immutable d = a1.distance(a2);
-			if (d > 15) resSeq = a2.resSeq;
+			immutable d = c1.distance(coords2[j]);
+			if (d > cut_off + 15) resSeq = resSeq2[j];
 			if (d > cut_off) continue;
-			contacts ~= a1.chainID
-				~ a1[22 .. 26].strip.to!string
+			contacts ~= ch1
+				~ resSeq1
 				~ "-"
-				~ a2.chainID
-				~ a2[22 .. 26].strip.to!string
+				~ chain2[j]
+				~ resSeq2[j].to!string
 				~ ": "
 				~ d.format!"%4.1f";
 		}

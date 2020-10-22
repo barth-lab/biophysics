@@ -65,6 +65,14 @@ double distance(const Atom a1, const Atom a2) {
 	return sqrt(dx*dx + dy*dy + dz*dz);
 }
 
+double distance(const double[3] c1, const double[3] c2) {
+	import std.math;
+	double[3] dc = c1[] - c2[];
+
+	return sqrt(dc[0]*dc[0] + dc[1]*dc[1] + dc[2]*dc[2]);
+}
+
+
 bool hasLength(char[] l) { return l.length  == 80; }
 bool isAtom(char[] l)    { return l[0 .. 4] == "ATOM"; }
 bool isHeterogen(char[] l)   { return l[0 .. 6] == "HETATM"; }
