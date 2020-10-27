@@ -35,7 +35,7 @@ int[] str2index(string s) {
 	return index;
 }
 
-double[string] contacts(R)(R atoms, double cut_off, int[] residues) {
+double[string] contacts(R)(R atoms, double cut_off, int[] residues, int offset) {
 	import std.algorithm;
 	import std.range;
 	import std.format;
@@ -61,7 +61,7 @@ double[string] contacts(R)(R atoms, double cut_off, int[] residues) {
 		immutable keyi    =  format("%c%04d",chains[i], resSeqi);
 		int       resSkip = 0;
 		foreach (j; i .. coords.length) {
-			if (resSeqs[j] <= resSeqi + 1) continue;
+			if (resSeqs[j] <= resSeqi + offset) continue;
 			if (resSeqs[j] == resSkip) continue;
 			if (!isWanted[i] && !isWanted[j]) continue;
 
@@ -124,6 +124,7 @@ void main(string[] args) {
 
 	bool   non      = false;
 	double cutoff   = 4.;
+	int    offset   = 1;
 	string to       = "";
 	string residues = "1-9999";
 
@@ -136,6 +137,10 @@ void main(string[] args) {
 		"to|t",
 		"File to compare to, default = none",
 		&to,
+
+		"offset|o",
+		"Minimum residue-number difference",
+		&offset,
 
 		"residues|r",
 		"Contact must include this residue, default = all",
@@ -161,7 +166,7 @@ void main(string[] args) {
 	double[string] cs = void;
 
 	if (to.empty) {
-		cs = contacts(pdb1, cutoff, str2index(residues));	
+		cs = contacts(pdb1, cutoff, str2index(residues), offset);	
 	}
 	else {
 		auto pdb2  = File(to).parse(non).filter!(a => !a.isH);
@@ -169,7 +174,7 @@ void main(string[] args) {
 		cs = contacts(pdb1, pdb2, cutoff);
 	}
 
-	foreach (k, v; cs) {
-		writefln("%s: %5.2f", k, v);
+	foreach (k; cs.keys.sort) {
+		writefln("%s: %5.2f", k, cs[k]);
 	}
 }
