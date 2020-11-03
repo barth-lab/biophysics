@@ -26,7 +26,7 @@ void print_fill(Range)(Range atoms, string res) {
 	char ch   = atom.chainID;
 	int  ai   = 1;
 	int  ri   = 1;
-	char[80] old;
+	char[80] old = atom;
 
 	for(;;) {
 		if (atom.chainID != ch) {
