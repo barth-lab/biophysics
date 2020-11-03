@@ -25,7 +25,7 @@ void print_fill(Range)(Range atoms, string res) {
 	auto atom = atoms.front;
 	char ch   = atom.chainID;
 	int  ai   = 1;
-	int  ri   = 1;
+	int  ri   = 0;
 	char[80] old = atom;
 
 	for(;;) {
