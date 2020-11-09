@@ -112,7 +112,6 @@ double[string] contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
 	return contacts;
 }
 
-
 immutable description=
 "Find residue-contacts in PDB-FILE or between PDB-FILE1 and 2 to standard output.";
 
@@ -123,6 +122,7 @@ void main(string[] args) {
 	import std.array;
 
 	bool   non      = false;
+	bool   rmSim    = false;
 	double cutoff   = 4.;
 	int    offset   = 1;
 	string to       = "";
@@ -145,6 +145,10 @@ void main(string[] args) {
 		"residues|r",
 		"Contact must include this residue, default = all",
 		&residues,
+
+		"remove_similar|s",
+		"Remove redundant contacts that are similar to a better one",
+		&rmSim,
 
 		"cutoff|c",
 		"Contact cutoff, default = 4A",
@@ -174,7 +178,31 @@ void main(string[] args) {
 		cs = contacts(pdb1, pdb2, cutoff);
 	}
 
-	foreach (k; cs.keys.sort) {
+	auto redundant(string key1, string key2) {
+		import std.conv;
+		import std.math;
+		immutable i1 = key1[1 .. 5].to!int;
+		immutable j1 = key1[7 .. 11].to!int;
+		immutable i2 = key2[1 .. 5].to!int;
+		immutable j2 = key2[7 .. 11].to!int;
+		if ((abs(i1 - i2) < 4) && (abs(j1 - j2) < 4)) {
+			return true;
+		}
+		return false;
+	}
+
+	string[] keys;
+	if (rmSim) {
+		foreach (k; cs.keys.sort!((k1, k2) => cs[k1] < cs[k2])) {
+			if (keys.any!(kn => redundant(kn, k))) continue;
+			keys ~= k;
+		}
+	}
+	else {
+		keys = cs.keys;
+	}
+
+	foreach (k; keys.sort) {
 		writefln("%s: %5.2f", k, cs[k]);
 	}
 }
