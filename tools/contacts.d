@@ -7,6 +7,7 @@
 	dependency "biophysics" version="*" path=".."
 +/
 
+
 /* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -127,6 +128,7 @@ void main(string[] args) {
 	int    offset   = 1;
 	string to       = "";
 	string residues = "1-9999";
+	string chains   = "";
 
 	auto opt = getopt(
 		args,
@@ -137,6 +139,10 @@ void main(string[] args) {
 		"to|t",
 		"File to compare to, default = none",
 		&to,
+
+		"chains|c",
+		"CHAINS to use, default = all",
+		&chains,
 
 		"offset|o",
 		"Minimum residue-number difference",
@@ -150,8 +156,8 @@ void main(string[] args) {
 		"Remove redundant contacts that are similar to a better one",
 		&rmSim,
 
-		"cutoff|c",
-		"Contact cutoff, default = 4A",
+		"cutoff-distance|d",
+		"Contact cutoff-distance, default = 4A",
 		&cutoff);
 
 	if (args.length > 2 || args.length == 0 || opt.helpWanted) {
@@ -170,7 +176,16 @@ void main(string[] args) {
 	double[string] cs = void;
 
 	if (to.empty) {
-		cs = contacts(pdb1, cutoff, str2index(residues), offset);	
+
+		if (!chains.empty) {
+			auto p = pdb1.map!(dup).array;			
+			auto r = p.filter!(a => !chains.canFind(a.chainID));
+			auto c = p.filter!(a => chains.canFind(a.chainID));
+			cs = contacts(r, c, cutoff);
+		}
+		else {
+			cs = contacts(pdb1, cutoff, str2index(residues), offset);	
+		}
 	}
 	else {
 		auto pdb2  = File(to).parse(non).filter!(a => !a.isH);
