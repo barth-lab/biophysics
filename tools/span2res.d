@@ -33,7 +33,7 @@ void main(string[] args) {
 	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard residues", &non,
-		"add-helix|a", "Add this many residues of membrane to residues", &add,
+		"add_helix|a", "Add this many residues of membrane to residues", &add,
 		"inside|i", "Extract residues inside of membrane", &ins);
 
 	if (args.length > 2 || opt.helpWanted) {

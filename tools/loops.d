@@ -16,7 +16,7 @@
 module tools.loops;
 
 immutable description=
-"Extract residue numbers not in secondary structure to standard output.";
+"Print loop residue numbers not in secondary structure to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
