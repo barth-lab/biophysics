@@ -16,7 +16,7 @@
 module tools.span2res;
 
 immutable description=
-"Extract residues numbers outside of membrane from SPAN-FILE to standard output.";
+"Print residues numbers outside of membrane from SPAN-FILE to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
@@ -33,7 +33,7 @@ void main(string[] args) {
 	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard residues", &non,
-		"add-helix|a", "Add this many residues of membrane to loops", &add,
+		"add-helix|a", "Add this many residues of membrane to residues", &add,
 		"inside|i", "Extract residues inside of membrane", &ins);
 
 	if (args.length > 2 || opt.helpWanted) {
