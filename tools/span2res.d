@@ -16,7 +16,7 @@
 module tools.span2res;
 
 immutable description=
-"Extract residues outside of membrane from SPAN-FILE to standard output.";
+"Extract residues numbers outside of membrane from SPAN-FILE to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
@@ -29,9 +29,11 @@ void main(string[] args) {
 
 	bool non = false;
 	bool ins = false;
+	int  add  = 0;
 	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard residues", &non,
+		"add-helix|a", "Add this many residues of membrane to loops", &add,
 		"inside|i", "Extract residues inside of membrane", &ins);
 
 	if (args.length > 2 || opt.helpWanted) {
@@ -64,10 +66,10 @@ void main(string[] args) {
 			if (i < 4) continue;	
 
 			auto sp = l.splitter;
-			immutable stop = (sp.front.to!int - 1).to!string;
+			immutable stop = (sp.front.to!int - 1 + add).to!string;
 			res ~= start ~ '-' ~ stop ~ ','; 
 			sp.popFront;
-			start = (sp.front.to!int + 1).to!string;
+			start = (sp.front.to!int + 1 - add).to!string;
 		}
 		res ~= start ~ "-9999";
 		
