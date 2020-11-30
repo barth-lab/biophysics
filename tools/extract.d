@@ -15,24 +15,6 @@
 
 module tools.extract;
 
-auto str2index(string s) {
-	import std.array;
-	import std.conv;
-
-	int[] index;
-	immutable csplits = s.split(',');
-	foreach (csp; csplits) {
-		immutable dsplits = csp.split('-');	
-		if (dsplits.length == 1) index ~= dsplits[0].to!int;
-		else {
-			immutable from = dsplits[0].to!int;
-			immutable to   = dsplits[1].to!int + 1;
-			foreach (i; from .. to) index ~= i;
-		}
-	}
-	return index;
-}
-
 immutable description=
 "Extract chains and/or residues from PDB-FILE to standard output.";
 
@@ -52,6 +34,7 @@ void main(string[] args) {
 	import std.array;
 	import std.string;
 	import biophysics.pdb;
+	import biophysics.util;
 
 	bool   non      = false;
 	string ids      = "";
@@ -89,8 +72,8 @@ void main(string[] args) {
 	}
 	if (ids.empty) ids=chains;
 
-	immutable resSeqs = str2index(residues);
-	auto      file    = (args.length == 2 ? File(args[1]) : stdin);
+	immutable resSeqs = str2index( residues );
+	auto      file    = ( args.length == 2 ? File( args[1] ) : stdin );
 
 	auto as = file.parse(non)
 		       .filter!(a => chains.canFind(a.chainID))

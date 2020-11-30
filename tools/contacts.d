@@ -18,24 +18,6 @@ module tools.contacts;
 
 import biophysics.pdb;
 
-int[] str2index(string s) {
-	import std.array;
-	import std.conv;
-
-	int[] index;
-	immutable csplits = s.split(',');
-	foreach (csp; csplits) {
-		immutable dsplits = csp.split('-');	
-		if (dsplits.length == 1) index ~= dsplits[0].to!int;
-		else {
-			immutable from = dsplits[0].to!int;
-			immutable to   = dsplits[1].to!int + 1;
-			foreach (i; from .. to) index ~= i;
-		}
-	}
-	return index;
-}
-
 double[string] contacts(R)(R atoms, double cut_off, int[] residues, int offset) {
 	import std.algorithm;
 	import std.range;
@@ -121,6 +103,7 @@ void main(string[] args) {
 	import std.algorithm;
 	import std.stdio;
 	import std.array;
+	import biophysics.util;
 
 	bool   non      = false;
 	bool   rmSim    = false;

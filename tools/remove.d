@@ -15,24 +15,6 @@
 
 module tools.rm_res;
 
-auto str2index(string s) {
-	import std.array;
-	import std.conv;
-
-	int[] index;
-	immutable csplits = s.split(',');
-	foreach (csp; csplits) {
-		immutable dsplits = csp.split('-');	
-		if (dsplits.length == 1) index ~= dsplits[0].to!int;
-		else {
-			immutable from = dsplits[0].to!int;
-			immutable to   = dsplits[1].to!int + 1;
-			foreach (i; from .. to) index ~= i;
-		}
-	}
-	return index;
-}
-
 immutable description=
 "Remove residues from PDB-FILE and print remaining file to standard output.";
 
@@ -48,6 +30,7 @@ void main(string[] args) {
 	import std.array;
 	import std.string;
 	import biophysics.pdb;
+	import biophysics.util;
 
 	bool   non      = false;
 	bool   set0     = false;
@@ -79,7 +62,7 @@ void main(string[] args) {
 		return;
 	}
 	immutable resSeqs = str2index(residues);
-	auto      file    = (args.length == 2 ? File(args[1]) : stdin);
+	auto file     = ( args.length == 2 ? File( args[1] ) : stdin );
 
 	if (set0) {
 		immutable BB = ["N", "CA", "C", "O"];
