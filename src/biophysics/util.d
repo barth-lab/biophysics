@@ -6,6 +6,7 @@
 
 module biophysics.util;
 
+/// Translate input-string with index-numbers to indexes
 int[] str2index(const string s) pure {
 	import std.array;
 	import std.conv;
@@ -14,7 +15,11 @@ int[] str2index(const string s) pure {
 	immutable csplits = s.split(',');
 	foreach (csp; csplits) {
 		immutable dsplits = csp.split('-');	
-		if (dsplits.length == 1) index ~= dsplits[0].to!int;
+		if (!dsplits.length) continue;
+
+		if (dsplits.length == 1) {
+			index ~= dsplits[0].to!int;
+		}
 		else {
 			immutable from = dsplits[0].to!int;
 			immutable to   = dsplits[1].to!int + 1;
@@ -22,4 +27,12 @@ int[] str2index(const string s) pure {
 		}
 	}
 	return index;
+}
+///
+unittest {
+	assert(str2index("") == []);
+	assert(str2index(",") == []);
+	assert(str2index("1") == [1]);
+	assert(str2index("1,") == [1]);
+	assert(str2index("1,2-5,11,15,") == [1,2,3,4,5,11,15]);
 }
