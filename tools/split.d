@@ -17,7 +17,7 @@ module tools.split;
 
 import biophysics.pdb;
 
-auto splitChains(Range)(lazy Range atoms, double dist = 4) {
+auto splitChains(Range)(lazy Range atoms, double dist) {
 	import std.algorithm;
 
 	char[80] old;
@@ -28,10 +28,35 @@ auto splitChains(Range)(lazy Range atoms, double dist = 4) {
 	uint old_number = 0;
 
 	return atoms.map!((atom) {
-		if (atom.resSeq != old_number) {
+		immutable rs = atom.resSeq;       
+		if (rs != old_number) {
 			if (distance(atom, old) > dist) chain++;
 
-			old_number = atom.resSeq;
+			old_number = rs;
+			old        = atom;
+		}
+		atom.chainID = chain;
+
+		return atom;
+	});
+}
+
+auto splitChains(Range)(lazy Range atoms) {
+	import std.algorithm;
+
+	char[80] old;
+	old.x = 1e6;
+	old.y = 1e6;
+	old.z = 1e6;
+	char chain = 'A' - 1;
+	int old_number = -1;
+
+	return atoms.map!((atom) {
+		immutable rs = atom.resSeq;       
+		if (rs != old_number) {
+			if (rs - old_number > 1) chain++;
+
+			old_number = rs;
 			old        = atom;
 		}
 		atom.chainID = chain;
@@ -47,9 +72,13 @@ void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
 
-	bool non = false;
-	auto opt = getopt(args, "hetatm|n",
-			  "Use non-standard (HETATM) residues", &non);
+	bool non   = false;
+	bool byres = false;
+
+	auto opt = getopt(
+		args,
+		"hetatm|n", "Use non-standard residues", &non,
+		"by_residue|r", "Split by residue-number break", &byres);
 
 	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -63,8 +92,16 @@ void main(string[] args) {
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
 
-	file.parse(non)
-	    .splitChains
-	    .print;
+	if (byres) {
+		file.parse(non)
+		    .splitChains
+		    .print;
+
+	    }
+	else {
+		file.parse(non)
+		    .splitChains(4.)
+		    .print;
+	}
 
 }
