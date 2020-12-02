@@ -18,15 +18,15 @@ module tools.translate;
 import std.algorithm;
 import biophysics.pdb;
 
-auto translate(Range)(Range atoms, double x, double y, double z, string chain) {
+auto translate(Range)(Range atoms, double[3] vec, string chain) {
 	import std.math;
 
 	return atoms.map!((atom) {
 		if (!chain.canFind(atom.chainID)) return atom;
 
-		if (!x.isNaN) atom.x = atom.x + x;
-		if (!y.isNaN) atom.y = atom.y + y;
-		if (!z.isNaN) atom.z = atom.z + z;
+		if (!vec[0].isNaN) atom.x = atom.x + vec[0];
+		if (!vec[1].isNaN) atom.y = atom.y + vec[1];
+		if (!vec[2].isNaN) atom.z = atom.z + vec[2];
 		return atom;
 	});
 }
@@ -61,5 +61,5 @@ void main(string[] args) {
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
 
-	file.parse(non).translate(x, y, z, chains).print;
+	file.parse(non).translate([x, y, z], chains).print;
 }
