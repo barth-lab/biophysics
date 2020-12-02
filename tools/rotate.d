@@ -28,7 +28,7 @@ double[4] quat_mul(double[4] q, double[4] r) {
 		];
 }
 
-auto rotate(Range)(Range atoms, double[3] angles, string chain) {
+auto rotate(Range)(Range atoms, double[3] angles, string chains) {
 	import std.math;
 	import std.array;
 	import std.range;
@@ -37,33 +37,38 @@ auto rotate(Range)(Range atoms, double[3] angles, string chain) {
 	import mir.math.sum;
 
 	auto all = atoms.map!dup.array;
-	auto chs = all.filter!(a => chain.canFind(a.chainID));
+	auto chs = all.filter!(a => chains.canFind(a.chainID));
+	auto com = [0., 0., 0.].sliced;
 	double[] raw;
-	auto com    = [0., 0., 0.].sliced;
 	foreach (i, a; chs.enumerate) {
 		immutable x = a.x;
 		immutable y = a.y;
 		immutable z = a.z;
-		raw ~= [x, y, z];
+		raw   ~= [x, y, z];
 		com[] += [x, y, z];
 	}
 	auto crds = raw.sliced(raw.length/3, 3);
 	com[]    /= (crds.length);
 	auto pca  = crds.pca;
 
+	double[4][3] qs;
+	double[4][3] q_1s;
+	ulong[] js;
+	foreach (j, ang; angles[].enumerate) {
+		if (ang.isNaN) continue;
+		js     ~= j;
+		auto vj = pca.coeff[j][] * sin(ang / 2);
+		qs[j]   = [cos(ang / 2), vj[0], vj[1], vj[2]];
+		q_1s[j] = [cos(ang / 2), -vj[0], -vj[1], -vj[2]];
+	}
 	foreach(i, a; chs.enumerate) {
-		double[4] p   = [0,
-				 crds[i][0] - com[0],
-				 crds[i][1] - com[1],
-				 crds[i][2] - com[2]];
-		foreach (j, ang; angles[].enumerate) {
-			if (ang.isNaN) continue;
-			auto vj       = pca.coeff[j];
-			auto t        = vj[] * sin(ang / 2);
-			double[4] q   = [cos(ang / 2), t[0], t[1], t[2]];
-			double[4] q_1 = [cos(ang / 2), -t[0], -t[1], -t[2]];
-			p             = quat_mul(quat_mul(q, p), q_1);
-			p[0]          = 0;
+		double[4] p = [0,
+			      crds[i][0] - com[0],
+			      crds[i][1] - com[1],
+			      crds[i][2] - com[2]];
+		foreach (j; js) {
+			p    = quat_mul(quat_mul(qs[j], p), q_1s[j]);
+			p[0] = 0;
 		}
 		a.x = p[1] + com[0];
 		a.y = p[2] + com[1];
