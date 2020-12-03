@@ -17,21 +17,28 @@ module tools.split;
 
 import biophysics.pdb;
 
-auto splitChains(Range)(lazy Range atoms, double dist) {
+auto splitByDist(Range)(lazy Range atoms, double dist) {
 	import std.algorithm;
 
 	char[80] old;
-	old.x = 1e6;
-	old.y = 1e6;
-	old.z = 1e6;
-	char chain = 'A' - 1;
+	old.x           = 1e6;
+	old.y           = 1e6;
+	old.z           = 1e6;
+	char chain      = 'A' - 1;
+	char old_chain  = 'A' - 1;
 	uint old_number = 0;
 
 	return atoms.map!((atom) {
 		immutable rs = atom.resSeq;       
+		immutable ci = atom.chainID;
 		if (rs != old_number) {
-			if (distance(atom, old) > dist) chain++;
-
+			if (old_chain != ci) {
+				chain++;
+				old_chain = ci;
+			}
+			else if (distance(atom, old) > dist) {
+				chain++;
+			}
 			old_number = rs;
 			old        = atom;
 		}
@@ -41,23 +48,25 @@ auto splitChains(Range)(lazy Range atoms, double dist) {
 	});
 }
 
-auto splitChains(Range)(lazy Range atoms) {
+auto splitByRes(Range)(lazy Range atoms) {
 	import std.algorithm;
 
-	char[80] old;
-	old.x = 1e6;
-	old.y = 1e6;
-	old.z = 1e6;
-	char chain = 'A' - 1;
-	int old_number = -1;
+	char chain      = 'A' - 1;
+	char old_chain  = 'A' - 1;
+	int  old_number = 0;
 
 	return atoms.map!((atom) {
-		immutable rs = atom.resSeq;       
+		immutable rs = atom.resSeq;
+		immutable ci = atom.chainID;
 		if (rs != old_number) {
-			if (rs - old_number > 1) chain++;
-
+			if (old_chain != ci) {
+				chain++;
+				old_chain = ci;
+			}
+			else if (rs - old_number > 1) {
+				chain++;
+			}
 			old_number = rs;
-			old        = atom;
 		}
 		atom.chainID = chain;
 
@@ -71,14 +80,20 @@ immutable description=
 void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
+	import std.algorithm;
+	import std.array;
 
-	bool non   = false;
-	bool byres = false;
+	bool non      = false;
+	bool byres    = false;
+	bool bydist   = false;
+	bool perchain = false;
 
 	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard residues", &non,
-		"by_residue|r", "Split by residue-number break", &byres);
+		"by_residue|r", "Split by residue-number break", &byres,
+		"by_distance|d", "Split by distance cutoff", &byres,
+		"per_chain|p", "Output one pdb per chain", &perchain);
 
 	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -90,18 +105,23 @@ void main(string[] args) {
 			opt.options);
 		return;
 	}
-	auto file = (args.length == 2 ? File(args[1]) : stdin);
+	immutable hasFile = args.length == 2;
+	immutable fn      = (hasFile ? args[1] : "");
+	auto file = (hasFile ? File(fn) : stdin);
 
 	if (byres) {
-		file.parse(non)
-		    .splitChains
-		    .print;
-
+		auto of = file.parse(non).splitByRes;
+		if (!perchain) of.print;
+		else of.print_chains(fn);
 	    }
-	else {
-		file.parse(non)
-		    .splitChains(4.)
-		    .print;
+	else if (bydist) {
+		auto of = file.parse(non).splitByDist(4.);
+		if (!perchain) of.print;
+		else of.print_chains(fn);
 	}
-
+	else {
+		auto of = file.parse(non);
+		if (!perchain) of.print;
+		else of.print_chains(fn);
+	}
 }

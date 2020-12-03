@@ -19,7 +19,7 @@ auto parse(File file, bool heterogen=false) {
 }
 
 /// Print a pdb-file, including TER lines and END lines
-void print(Range)(Range atoms) {
+void print(Range)(Range atoms, File file = stdout) {
 	import std.stdio;
 	import std.range;
 
@@ -32,12 +32,12 @@ void print(Range)(Range atoms) {
 		if (ai.chainID != ch) {
 			ch         = ai.chainID;
 			old.serial = i++;
-			old[0..$].ter.writeln;
+			file.writeln(old[0..$].ter);
 		}
 		ai.serial = i++;
 		old       = ai;
 
-		writefln("%-80s", ai);
+		file.writefln("%-80s", ai);
 		
 		atoms.popFront;
 		if (atoms.empty) {
@@ -45,10 +45,48 @@ void print(Range)(Range atoms) {
 		}
 		ai = atoms.front;
 	} 
-
 	old.serial = i;
-	old[0..$].ter.writeln;
-	writefln("%-80s", "END");
+	file.writeln(old[0..$].ter);
+	file.writefln("%-80s", "END");
+}
+
+/// Print each chain to a pdb-file, including TER lines and END lines
+void print_chains(Range)(Range atoms, string filename) {
+	import std.stdio;
+	import std.range;
+
+	auto ai = atoms.front;
+	char ch = ai.chainID;
+	int  i  = 1;
+	char[80] old;
+	filename = (filename.empty
+	                    ? filename
+	                    : filename.split(".")[0].split("/")[$ - 1] ~'_');
+	File file = File(filename ~ ch ~ ".pdb", "w");
+
+	for(;;) {
+		if (ai.chainID != ch) {
+			ch         = ai.chainID;
+			old.serial = i++;
+			file.writeln(old[0..$].ter);
+			file.writefln("%-80s", "END");
+			file.close;
+			file.open(filename ~ ch ~ ".pdb", "w");
+		}
+		ai.serial = i++;
+		old       = ai;
+
+		file.writefln("%-80s", ai);
+		
+		atoms.popFront;
+		if (atoms.empty) {
+			break;
+		}
+		ai = atoms.front;
+	} 
+	old.serial = i;
+	file.writeln(old[0..$].ter);
+	file.writefln("%-80s", "END");
 }
 
 /// TER line of pdb
@@ -73,7 +111,6 @@ double distance(const Atom a1, const Atom a2) pure {
 double distance(const double[3] c1, const double[3] c2) pure nothrow {
 	import std.math;
 	double[3] dc = c1[] - c2[];
-
 	return sqrt(dc[0]*dc[0] + dc[1]*dc[1] + dc[2]*dc[2]);
 }
 unittest {
