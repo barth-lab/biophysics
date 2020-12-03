@@ -1,9 +1,9 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
-	name        "split"
+	name        "split_pdb"
 	targetType  "executable"
 	targetPath  "../bin"
-	targetName  "split"
+	targetName  "split_pdb"
 	dependency "biophysics" version="*" path=".."
 +/
 
