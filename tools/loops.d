@@ -24,16 +24,20 @@ void main(string[] args) {
 	import std.algorithm;
 	import std.string;
 	import std.conv;
+	import std.array;
+	import biophysics.pdb;
 
 	bool non  = false;
 	bool ins  = false;
-	int  lmin = 4;
+	int  hmin = 4;
+	int  min  = 4;
 	int  add  = 0;
-	auto opt = getopt(
+	auto opt  = getopt(
 		args,
 		"hetatm|n", "Use non-standard residues", &non,
-		"lmin|l", "Minimum SS length, default=4", &lmin,
-		"add-helix|a", "Add this many residues of helix to loops", &add,
+		"lmin|l", "Minimum helix length, default=4", &hmin,
+		"rmin|m", "Minimum loop length", &min,
+		"add_helix|a", "Add this many residues of helix to loops", &add,
 		"inside|i", "Extract residues inside of membrane", &ins);
 
 	if (args.length > 2 || opt.helpWanted) {
@@ -47,18 +51,33 @@ void main(string[] args) {
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
+	char[][] raw  = file.byLine.map!dup.array;
 
-	auto hs = file.byLine.filter!(l => l.startsWith("HELIX"));
+	auto hs = raw.filter!(l => l.startsWith("HELIX"));
+	auto as = raw.filter!(l => l.hasLength && l.isAtom && l.name == "CA");
+	int length = 0;
+	foreach (char[] a; as) {
+		length = max(length, a.resSeq);	
+	}
 
-	string res = "1";
+	string res   = "";
+	int    from = 1;
 	foreach (h; hs) {
-		immutable from = h[21 .. 25].strip.to!int;
-		immutable to   = h[33 .. 37].strip.to!int;
-		if ((to - from + 1) >= lmin) {
-			res ~= '-' ~  (from - 1 + add).to!string;
-			res ~= ',' ~  (to + 1 - add).to!string;
+		immutable hfrom = h[21 .. 25].strip.to!int;
+		immutable hto   = h[33 .. 37].strip.to!int;
+		immutable to    = hfrom - 1;
+		if ((hto - hfrom + 1) >= hmin) {
+			if (to - from >= min) {
+				res ~= max(1, from - add).to!string ~ '-'
+				     ~ (to + add).to!string ~ ',';
+			}
+			from = hto + 1;
 		}
 	}
-	res ~= "-9999";
+	immutable to = length;
+	if (to - from >= min) {
+		res ~= max(1, from - add).to!string ~ '-'
+			~ (to + add).to!string ~ ',';
+	}
 	res.writeln;
 }
