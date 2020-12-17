@@ -43,7 +43,6 @@ string[char] fasta(Range)(Range atoms, bool showGaps) {
 		if (resNum == a.resSeq) continue;
 		if (a.chainID != ch) {
 			ch     = a.chainID;
-			resNum = 0;
 			chains.require(ch, "");
 		}
 		resNum = (showGaps ? resNum + 1 : a.resSeq);
