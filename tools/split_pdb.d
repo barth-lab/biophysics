@@ -19,6 +19,7 @@ import biophysics.pdb;
 
 auto splitByDist(Range)(lazy Range atoms, double dist) {
 	import std.algorithm;
+	import std.stdio;
 
 	char[80] old;
 	old.x           = 1e6;
@@ -92,7 +93,7 @@ void main(string[] args) {
 		args,
 		"hetatm|n", "Use non-standard residues", &non,
 		"by_residue|r", "Split by residue-number break", &byres,
-		"by_distance|d", "Split by distance cutoff", &byres,
+		"by_distance|d", "Split by distance cutoff", &bydist,
 		"per_chain|p", "Output one pdb per chain", &perchain);
 
 	if (args.length > 2 || opt.helpWanted) {
