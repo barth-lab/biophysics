@@ -61,9 +61,11 @@ void main(string[] args) {
 	auto file = (hasFile ? File(fn) : stdin);
 	auto chains = file.parse.count;
 
-	writef("%-12s", fn);
+	int tot = 0;
 	foreach (nres; chains.values.sort.reverse) {
 		writef("%5d ", nres);
+		tot += nres;
 	}
-	write('\n');
+	writef("%5d ", tot);
+	writefln("%-12s", fn);
 }
