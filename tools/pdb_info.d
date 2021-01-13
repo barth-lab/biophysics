@@ -1,9 +1,9 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
-	name        "info"
+	name        "pdb_info"
 	targetType  "executable"
 	targetPath  "../bin"
-	targetName  "info"
+	targetName  "pdb_info"
 	dependency "biophysics" version="*" path=".."
 +/
 
