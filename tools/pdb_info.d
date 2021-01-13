@@ -43,7 +43,10 @@ void main(string[] args) {
 	import std.array;
 	import std.string;
 
-	auto opt = getopt(args);
+	bool chainInfo = false;
+	auto opt     = getopt(
+		args,
+		"chains|c", "Print info per chain", &chainInfo);
 
 	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -63,7 +66,7 @@ void main(string[] args) {
 
 	int tot = 0;
 	foreach (nres; chains.values.sort.reverse) {
-		writef("%5d ", nres);
+		if(chainInfo) writef("%5d ", nres);
 		tot += nres;
 	}
 	writef("%5d ", tot);
