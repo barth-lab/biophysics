@@ -29,11 +29,6 @@ void print_fill(Range)(Range atoms, string res) {
 	char[80] old = atom;
 
 	for(;;) {
-		if (atom.chainID != ch) {
-			ch         = atom.chainID;
-			old.serial = ai++;
-			old[0..$].ter.writeln;
-		}
 		if (atom.resSeq != ri) {
 			ri++;
 		}
@@ -57,6 +52,11 @@ void print_fill(Range)(Range atoms, string res) {
 			}
 			ri++;
 		} 
+		if (atom.chainID != ch) {
+			ch         = atom.chainID;
+			old.serial = ai++;
+			old[0..$].ter.writeln;
+		}
 		atom.serial = ai++;
 		old         = atom;
 		writefln("%-80s", atom);
