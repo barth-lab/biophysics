@@ -108,8 +108,8 @@ void main(string[] args) {
 	auto fasta = File(fastaFn).fasta;
 	string res = "";
 
-	foreach (char ch; fasta.keys.representation.sort) {
-		res ~= fasta[ch];
+	foreach (ch; fasta) {
+		res ~= ch.seq;
 	}
 	pdb.print_fill(res);
 }

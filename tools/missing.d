@@ -54,8 +54,8 @@ void main(string[] args) {
 	auto file  = (args.length == 2 ? File(args[1]) : stdin);
 	auto fasta = file.fasta;
 	string res = "";
-	foreach (char ch; fasta.keys.representation.sort) {
-		res ~= fasta[ch];
+	foreach (ch; fasta) {
+		res ~= ch.seq;
 	}
 	int [] rnums;
 

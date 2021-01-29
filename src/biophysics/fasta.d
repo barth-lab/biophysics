@@ -7,6 +7,10 @@
 module biophysics.fasta;
 
 import std.stdio;
+import std.typecons;
+
+alias Chain = Tuple!(string, "seq", string, "name");
+alias Fasta = Chain[];
 
 
 char aminoAcids(string threeLetter) {
@@ -29,57 +33,59 @@ string aminoAcids(char oneLetter) {
 	return "X00";
 }
 
-string[char] fasta(Range)(Range atoms, bool showGaps) {
+Fasta fasta(Range)(Range atoms, bool showGaps) {
 	import biophysics.pdb;
 	import std.algorithm;
 	import std.array;
+	import std.conv;
 
-	string[char] chains;
-	char ch    = atoms.front.chainID;
-	chains[ch] = "";
+	Fasta chains;
+	char ch = atoms.front.chainID;
+	chains ~= Chain(ch.to!string, "");
 	int resNum = 0;
 
 	foreach (a; atoms) {
 		if (resNum == a.resSeq) continue;
 		if (a.chainID != ch) {
-			ch     = a.chainID;
-			chains.require(ch, "");
+			ch = a.chainID;
+			chains ~= Chain(ch.to!string, "");
 		}
 		resNum = (showGaps ? resNum + 1 : a.resSeq);
 		while (showGaps && resNum < a.resSeq) {
-			chains[ch] ~= '-';
+			chains[$ - 1].seq ~= '-';
 			resNum++;
 		}
-		chains[ch] ~= aminoAcids(a.resName);
+		chains[$ - 1].seq ~= aminoAcids(a.resName);
 	}
 	return chains;
 }
 
-string[char] fasta(File file) {
+Fasta fasta(File file) {
 	import std.algorithm;
 	import std.string;
-	string[char] chains;
-	char ch = void;
+	import std.conv;
+	Fasta chains;
+	string ch = void;
 	foreach (l; file.byLine) {
 		if (l.startsWith('>')) {
-			ch = l.strip[$ - 1];	
-			chains.require(ch, "");
+			ch = l.strip.to!string;
+			chains ~= Chain(ch, "");
 		}
 		else {
-			chains[ch] ~= l.strip;
+			chains[$ - 1].seq ~= l.strip;
 		}
 	}
 	return chains;
 }
 
-void print(string[char] fasta, string name) {
+void print(Fasta fasta, string name) {
 	import std.algorithm;
 	import std.string;
 	if (!name.empty) name ~= "_";
 
-	foreach (char key; fasta.keys.representation.sort) {
-		writeln('>', name, key);
-		auto s = fasta[key];
+	foreach (ch; fasta) {
+		writeln('>', name, ch.name);
+		auto s = ch.seq;
 		while (s.length > 70) {
 			s[0 .. 70].writeln;
 			s = s[70 .. $];
