@@ -9,7 +9,7 @@ module biophysics.fasta;
 import std.stdio;
 import std.typecons;
 
-alias Chain = Tuple!(string, "seq", string, "name");
+alias Chain = Tuple!(string, "name", string, "seq");
 alias Fasta = Chain[];
 
 
@@ -68,7 +68,7 @@ Fasta fasta(File file) {
 	string ch = void;
 	foreach (l; file.byLine) {
 		if (l.startsWith('>')) {
-			ch = l.strip.to!string;
+			ch = l[1 .. $].strip.to!string;
 			chains ~= Chain(ch, "");
 		}
 		else {
