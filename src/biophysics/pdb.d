@@ -185,6 +185,11 @@ string charge(const Atom atom) pure { return atom[78 .. 80].strip.to!string; }
 void charge(Atom atom, string value) pure { atom[78 .. 80] = value.format!"%2s"; }
 
 bool isH(const Atom atom) pure nothrow { return atom[13] == 'H';}
+bool isBB(const Atom atom) pure nothrow {
+	auto n = atom[12..16];
+	return (n == " N  " || n == " C  " || n == " O  " || n == " CA ");
+}
+bool isCB(const Atom atom) pure nothrow { return atom[12 .. 16] == " CB ";}
 
 ///
 unittest {
