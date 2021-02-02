@@ -13,12 +13,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-module tools.fasta;
+module tools.insert;
 
 import biophysics.pdb;
 import biophysics.fasta;
 
-void print_fill(Range)(Range atoms, string res) {
+void print_fill(Range, StringOrChar)(Range atoms, StringOrChar res) {
 	import std.stdio;
 	import std.range;
 
@@ -33,9 +33,11 @@ void print_fill(Range)(Range atoms, string res) {
 			ri++;
 		}
 		while (ri < atom.resSeq) {
-			if (res[ri-1] == '-') {
-				ri++;
-				continue;
+			static if (is (StringOrChar == string)) {
+			    if (res[ri-1] == '-') {
+				    ri++;
+				    continue;
+			    }
 			}
 			old.x = 0;
 			old.y = 0;
@@ -44,7 +46,12 @@ void print_fill(Range)(Range atoms, string res) {
 			old.tempFactor = 0;
 			foreach (a; ["N", "CA", "C", "O"]) {
 				old.name = a;	
-				old.resName = res[ri-1].aminoAcids;
+				static if (is (StringOrChar == string)) {
+					old.resName = res[ri-1].aminoAcids;
+				}
+				else if (is (StringOrChar == char)) {
+					old.resName = res.aminoAcids;
+				}
 				old.resSeq  = ri;
 				old.serial  = ai++;
 				old.element = a[0 .. 1];
@@ -73,7 +80,7 @@ void print_fill(Range)(Range atoms, string res) {
 }
 
 immutable description=
-"Insert missing residues definen in FASA-file to PDB-FILE to standard output.";
+"Insert missing residues defined in FASTA-file or RESIDUE-type to PDB-FILE to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
@@ -83,12 +90,17 @@ void main(string[] args) {
 
 	bool   non     = false;
 	string fastaFn = "";
+	char   resType = 'G';
 
 	auto opt = getopt(
 		args,
 		"hetatm|n",
 		"Use non-standard (HETATM) residues",
 		&non,
+
+		"resType|r",
+		"RESIDUE-type to use",
+		&resType,
 
 		"FASTA-filename|f",
 		"FASTA-file to use",
@@ -104,12 +116,17 @@ void main(string[] args) {
 			opt.options);
 		return;
 	}
-	auto pdb   = (args.length == 2 ? File(args[1]) : stdin).parse(non);
-	auto fasta = File(fastaFn).fasta;
-	string res = "";
+	auto pdb = (args.length == 2 ? File(args[1]) : stdin).parse(non);
 
-	foreach (ch; fasta) {
-		res ~= ch.seq;
+	if (fastaFn.empty) {
+		pdb.print_fill(resType);
 	}
-	pdb.print_fill(res);
+	else {
+		auto fasta = File(fastaFn).fasta;
+		string res = "";
+		foreach (ch; fasta) {
+			res ~= ch.seq;
+		}
+		pdb.print_fill(res);
+	}
 }
