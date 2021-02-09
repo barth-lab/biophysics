@@ -35,4 +35,5 @@ unittest {
 	assert(str2index("1") == [1]);
 	assert(str2index("1,") == [1]);
 	assert(str2index("1,2-5,11,15,") == [1,2,3,4,5,11,15]);
+	assert(str2index("2-5,11,15,1") == [2,3,4,5,11,15,1]);
 }

@@ -20,8 +20,10 @@ immutable description=
 
 immutable extra =	
 "Declare chains as capital letters. For example to extract A, C and E use 
---chains ACE.
-Declare chainIDs the same way.
+--chains ACE. 
+
+You can change the order of chains by --chains BA, printing first chain B and 
+then chain A. Best use together with renumber.
 
 Declare residues as numbers, seperated by '-' and ','. For example, to
 extract residues 1 to 10, 13 and 15 to 20, use
@@ -37,7 +39,6 @@ void main(string[] args) {
 	import biophysics.util;
 
 	bool   non      = false;
-	string ids      = "";
 	string chains   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	string residues = "1-9999";
 
@@ -50,10 +51,6 @@ void main(string[] args) {
 		"chains|c",
 		"CHAINS to extract, default = ABC...",
 		&chains,
-
-		"chainIDs|i",
-		"Use CHAINIDS instead of the original one, default = CHAINS",
-		&ids,
 
 		"residues|r",
 		"residues to extract, default = 1-9999.",
@@ -70,23 +67,16 @@ void main(string[] args) {
 		writeln("\n" ~ extra);
 		return;
 	}
-	if (ids.empty) ids=chains;
 
-	immutable resSeqs = str2index( residues );
-	auto      file    = ( args.length == 2 ? File( args[1] ) : stdin );
+	immutable resSeqs  = str2index(residues);
+	auto      file     = (args.length == 2 ? File(args[1]) : stdin);
+	auto      atoms_in = file.parse(non)
+	                         .filter !(a => resSeqs.canFind(a.resSeq))
+	                         .map !dup.array;
 
-	auto as = file.parse(non)
-		       .filter!(a => chains.canFind(a.chainID))
-		       .filter!(a => resSeqs.canFind(a.resSeq))
-		       .map!dup
-		       .array;
+	if (atoms_in.empty) return;
 
-	if (as.empty) return;
-
-	chains.map!(c => as.filter!(a => a.chainID == c))
+	chains.map!(c => atoms_in.filter!(a => a.chainID == c))
 	      .joiner
-	      .map!((a) {
-		 a.chainID = cast(char)(ids[chains.indexOf(a.chainID)]);
-		 return a;})
 	      .print;
 }
