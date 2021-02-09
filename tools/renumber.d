@@ -18,22 +18,33 @@ module tools.renumber;
 import std.algorithm;
 import biophysics.pdb;
 
-auto renumber(Range)(Range atoms, uint start=1, bool rechain=false) {
+auto renumber(Range)(Range atoms, uint start = 1, bool rechain = false,
+                     string chains = "") {
+	import std.range;
+	import std.stdio;
+	start--;	//loop starts with start++;
+
 	uint old_number = 0;
 	char old_chain  = ' ';
 	char chain      = 'A' - 1;
-	start--;
+	int  chain_i    = -1;
 
 	return atoms.map!((atom) {
 		if (atom.resSeq != old_number) {
 			old_number = atom.resSeq;
 			start++;
 		}
-		if (rechain && (atom.chainID != old_chain)) {
+		if (atom.chainID != old_chain) {
 			old_chain = atom.chainID;
-			chain++;	
+			if (rechain) {
+				chain++;
+			}
+			else if (chain_i < cast(int)(chains.length - 1)) {
+				chain_i++;	
+			}
 		}
 		if (rechain) atom.chainID = chain;
+		else if (!chains.empty) atom.chainID = chains[chain_i];
 
 		atom.resSeq = start;
 		return atom;
@@ -47,13 +58,16 @@ void main(string[] args) {
 	import std.getopt;
 	import std.stdio;
 
-	bool non     = false;
-	uint start   = 1;
-	bool rechain =false;
-	auto opt     = getopt(
+	bool   non     = false;
+	uint   start   = 1;
+	bool   rechain = false;
+	string chains  = "";
+
+	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
-		"rechain|c", "Renumber chains A through Z", &rechain,
+		"rechain|r", "Renumber chains A through Z", &rechain,
+		"chains|c", "Use these chainID", &chains,
 		"start|s", "Start at this value", &start);
 
 	if (args.length > 2 || opt.helpWanted) {
@@ -67,5 +81,5 @@ void main(string[] args) {
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	file.parse(non).renumber(start, rechain).print;
+	file.parse(non).renumber(start, rechain, chains).print;
 }
