@@ -74,6 +74,25 @@ void print_fill(Range, StringOrChar)(Range atoms, StringOrChar res) {
 		}
 		atom = atoms.front;
 	} 
+
+	static if (is (StringOrChar == string)) {
+		while (ri < res.length) {
+			ri++;
+			old.x = 0;
+			old.y = 0;
+			old.z = 0;
+			old.occupancy  = -1;
+			old.tempFactor = 0;
+			foreach (a; ["N", "CA", "C", "O"]) {
+				old.name = a;	
+				old.resName = res[ri-1].aminoAcids;
+				old.resSeq  = ri;
+				old.serial  = ai++;
+				old.element = a[0 .. 1];
+				writefln("%-80s", old);
+			}
+		}
+	}
 	old.serial = ai++;
 	old[0..$].ter.writeln;
 	writefln("%-80s", "END");
