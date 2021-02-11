@@ -6,45 +6,121 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#set -e
 cd `dirname $0`
 
-ediff() {
-   diff -q $1 $2 1>&2 
-}
-
+################################################################################
+# PARSE                                                                        #
+################################################################################
 # Parse residues of a pdb-file
 ../bin/parse input/1mnb.pdb  > output/1mnb_parse.pdb
 # Parse standard and non-standard (HETATM) residues of a pdb-file
 ../bin/parse -n input/3zev.pdb  > output/3zev_parse.pdb
 
-# Renumber pdb-file 1 through N
-../bin/renumber input/1mnb.pdb > output/1mnb_renumber.pdb
-# Renumber pdb-file 10 through N+10
-../bin/renumber -s 10 input/3zev.pdb > output/3zev_renumber.pdb
+################################################################################
+# PDB_INFO                                                                     #
+################################################################################
+# Get number of chains and residues
+../bin/pdb_info input/1mnb.pdb > output/1mnb.info
+# Get number of chains, residues and residues per chain
+../bin/pdb_info -c input/3zev.pdb > output/3zev.info
 
-# Translate x-coordinates by 100A
-../bin/translate  -x 100 input/1mnb.pdb  > output/1mnb_translate_x.pdb 
-# Translate x-coordinates by 1A, y by 3A and z by 2A
-../bin/translate  -x 1 -y 3 -z 2 input/1mnb.pdb  > output/1mnb_translate_xyz.pdb 
-#Translate y-coordinate of chains C and D by -23
-../bin/translate  -c CD -y -23 input/3zev.pdb  > output/3zev_translate_y.pdb 
+################################################################################
+# PDB_INFO                                                                     #
+################################################################################
+# Get loops (non secondary structure) of pdb
+../bin/loops input/1mnb.pdb > output/1mnb.loops
+# Get loops with at least length 10, considering helixes with minimum length 20
+# adding 5 residues at both ends of the loops
+../bin/loops -m 10 -l 20 -a 5 input/3zev.pdb > output/3zev.loops
 
-# Extract residues 1 through 10
-../bin/extract -r 1-10 input/1mnb.pdb > output/1mnb_extract.pdb
-# Extract chains A and C
-../bin/extract -c AC input/3zev.pdb > output/3zev_extract.pdb
-# Extract chains B and D, renumber residues and rename chains A and B
-../bin/extract -c BD input/3zev.pdb | ../bin/renumber -r > output/3zev_extract_rechain.pdb
-# Extract chains A and C, renumber residues and rename all chains to A
-../bin/extract -c AC input/3zev.pdb | ../bin/renumber -c A > output/3zev_extract_A.pdb
-
+################################################################################
+# FASTA                                                                        #
+################################################################################
 # Fasta of pdb-file
 ../bin/fasta input/1mnb.pdb > output/1mnb.fasta
 # Show gaps in fasta-file of chain A
 ../bin/extract -c A input/3zev.pdb  | fasta -s > output/3zev_A.fasta
 
+################################################################################
+# RENUMBER                                                                     #
+################################################################################
+# Renumber pdb-file 1 through N
+../bin/renumber input/1mnb.pdb > output/1mnb_renumber.pdb
+# Renumber pdb-file 10 through N+10
+../bin/renumber -s 10 input/3zev.pdb > output/3zev_renumber.pdb
+
+################################################################################
+# EXTRACT                                                                      #
+################################################################################
+# Extract residues 1 through 10
+../bin/extract -r 1-10 input/1mnb.pdb > output/1mnb_extract.pdb
+# Extract chains A and C
+../bin/extract -c AC input/3zev.pdb > output/3zev_extract.pdb
+# Extract chains B and D, renumber residues and rename chains A and B
+../bin/extract -c BD input/3zev.pdb | ../bin/renumber -r \
+	> output/3zev_extract_rechain.pdb
+# Extract chains A and C, renumber residues and rename all chains to A
+../bin/extract -c AC input/3zev.pdb | ../bin/renumber -c A \
+	> output/3zev_extract_A.pdb
+
+################################################################################
+# REMOVE                                                                       #
+################################################################################
+# Remove residues 1 through 10, 22 and 25 of pdb
+../bin/remove -r 1-10,22,25 input/1mnb.pdb > output/1mnb_remove.pdb
+
+################################################################################
+# INSERT
+################################################################################
+# Fill according to fasta
+../bin/insert -f output/1mnb.fasta output/1mnb_remove.pdb \
+	> output/1mnb_insert.pdb
+# Fill missing residues in chain A with GLYcine
+../bin/extract -c A input/3zev.pdb| ../bin/insert -r G > output/3zev_insert.pdb
+
+################################################################################
+# SPLIT_PDB                                                                    #
+################################################################################
+# Recombine all chains and split by distance
+../bin/renumber -c A input/3zev.pdb | ../bin/split_pdb -d \
+	> output/3zev_split_d.pdb
+# Split by residue-gap
+../bin/split_pdb -r input/3zev.pdb > output/3zev_split_r.pdb
+
+################################################################################
+# TRANSLATE                                                                    #
+################################################################################
+# Translate x-coordinates by 100A
+../bin/translate  -x 100 input/1mnb.pdb  > output/1mnb_translate_x.pdb 
+# Translate x-coordinates by 1A, y by 3A and z by 2A
+../bin/translate  -x 1 -y 3 -z 2 input/1mnb.pdb  \
+	> output/1mnb_translate_xyz.pdb 
+#Translate y-coordinate of chains C and D by -23
+../bin/translate  -c CD -y -23 input/3zev.pdb  > output/3zev_translate_y.pdb 
+
+################################################################################
+# ROTATE                                                                       #
+################################################################################
+# Rotate by 30° around first axis 
+../bin/rotate -1 30 input/1mnb.pdb  > output/1mnb_rotate.pdb
+# Rotate chain C by 10° around 1st, 20° around 2nd and 30° around 3rd axis
+../bin/rotate -c C -1 10 -2 20 -3 30 input/3zev.pdb  > output/3zev_rotate.pdb
+
+################################################################################
+# CONTACTS                                                                     #
+################################################################################
+# Contacts between residues which are at least 5 residue-number appart,
+# remove similar contacts (useful for constraint creation)
+../bin/contacts -s -o 5 input/1mnb.pdb > output/1mnb.ct
+# Contacts between chain A and B
+../bin/extract -c AB input/3zev.pdb  | contacts -c B > output/3zev.ct
+
+
+################################################################################
 # Regresison test
-for f in output/*.pdb; do
-	ediff $f ${f/output/expected}
+################################################################################
+#set -e
+
+for f in output/*; do
+	diff -q $f ${f/output/expected} 1>&2
 done
