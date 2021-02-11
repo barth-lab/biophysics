@@ -15,24 +15,6 @@
 
 module tools.info;
 
-import biophysics.pdb;
-
-auto count(Range)(Range atoms) {
-	int[char] chains;
-	int[char] old_res;
-
-	foreach (a; atoms) {
-		immutable ch = a.chainID;
-		chains.require(ch, 0);
-		old_res.require(ch, 0);
-		if (a.resSeq != old_res[ch]) {
-			old_res[ch] = a.resSeq;
-			chains[ch]++;
-		}
-	}
-	return chains;
-}
-
 immutable description=
 "Print information about a protein file.";
 
@@ -42,11 +24,15 @@ void main(string[] args) {
 	import std.stdio;
 	import std.array;
 	import std.string;
+	import biophysics.pdb;
+	import biophysics.fasta;
 
 	bool chainInfo = false;
+	bool countGaps = false;
 	auto opt     = getopt(
 		args,
-		"chains|c", "Print info per chain", &chainInfo);
+		"chains|c", "Print info per chain", &chainInfo,
+		"count_gaps|g", "Count gap as residue", &countGaps);
 
 	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -62,13 +48,20 @@ void main(string[] args) {
 	immutable hasFile = args.length == 2;
 	immutable fn      = (hasFile ? args[1] : "");
 	auto file = (hasFile ? File(fn) : stdin);
-	auto chains = file.parse.count;
+	auto fasta = file.parse.fasta(countGaps);
 
+	writef("#%8s %8s ", "N_chains", "N_restot");
 	int tot = 0;
-	foreach (nres; chains.values.sort.reverse) {
-		if(chainInfo) writef("%5d ", nres);
-		tot += nres;
+	string schains = "";
+	string sinfo   = "";
+	foreach (ch; fasta) {
+		immutable l = ch.seq.length;
+		if(chainInfo) {
+			schains ~= l.format!"%4u ";
+			sinfo   ~= ch.name.format!"%4s ";
+		}
+		tot += l;
 	}
-	writef("%5d ", tot);
-	writefln("%-12s", fn);
+	writeln(sinfo);
+	writefln("%9d %8d %s", fasta.length, tot, schains);
 }
