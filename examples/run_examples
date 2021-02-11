@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@epfl.ch>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#set -e
+cd `dirname $0`
+
+ediff() {
+   diff -q $1 $2 1>&2 
+}
+
+# Parse residues of a pdb-file
+../bin/parse input/1mnb.pdb  > output/1mnb_parse.pdb
+# Parse standard and non-standard (HETATM) residues of a pdb-file
+../bin/parse -n input/3zev.pdb  > output/3zev_parse.pdb
+
+# Renumber pdb-file 1 through N
+../bin/renumber input/1mnb.pdb > output/1mnb_renumber.pdb
+# Renumber pdb-file 10 through N+10
+../bin/renumber -s 10 input/3zev.pdb > output/3zev_renumber.pdb
+
+# Translate x-coordinates by 100A
+../bin/translate  -x 100 input/1mnb.pdb  > output/1mnb_translate_x.pdb 
+# Translate x-coordinates by 1A, y by 3A and z by 2A
+../bin/translate  -x 1 -y 3 -z 2 input/1mnb.pdb  > output/1mnb_translate_xyz.pdb 
+#Translate y-coordinate of chains C and D by -23
+../bin/translate  -c CD -y -23 input/3zev.pdb  > output/3zev_translate_y.pdb 
+
+# Extract residues 1 through 10
+../bin/extract -r 1-10 input/1mnb.pdb > output/1mnb_extract.pdb
+# Extract chains A and C
+../bin/extract -c AC input/3zev.pdb > output/3zev_extract.pdb
+# Extract chains B and D, renumber residues and rename chains A and B
+../bin/extract -c BD input/3zev.pdb | ../bin/renumber -r > output/3zev_extract_rechain.pdb
+# Extract chains A and C, renumber residues and rename all chains to A
+../bin/extract -c AC input/3zev.pdb | ../bin/renumber -c A > output/3zev_extract_A.pdb
+
+# Fasta of pdb-file
+../bin/fasta input/1mnb.pdb > output/1mnb.fasta
+# Show gaps in fasta-file of chain A
+../bin/extract -c A input/3zev.pdb  | fasta -s > output/3zev_A.fasta
+
+# Regresison test
+for f in output/*.pdb; do
+	ediff $f ${f/output/expected}
+done
