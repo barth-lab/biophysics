@@ -91,9 +91,9 @@ void main(string[] args) {
 	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
-		"1", "angle 1", &a1,
-		"2", "angle 2", &a2,
-		"3", "angle 3", &a3,
+		"1", "angle 1 [°]", &a1,
+		"2", "angle 2 [°]", &a2,
+		"3", "angle 3 [°]", &a3,
 		"chains|c", "Chains to rotate, default = all", &chains);
 
 	if (args.length > 2 || opt.helpWanted) {

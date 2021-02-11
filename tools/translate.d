@@ -44,9 +44,9 @@ void main(string[] args) {
 	auto opt = getopt(
 		args,
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
-		"x", "x-value", &x,
-		"y", "y-value", &y,
-		"z", "z-value", &z,
+		"x", "x-value [A]", &x,
+		"y", "y-value [A]", &y,
+		"z", "z-value [A]", &z,
 		"chains|c", "Chains to translate, default = all", &chains);
 
 	if (args.length > 2 || opt.helpWanted) {
