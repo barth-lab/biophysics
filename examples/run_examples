@@ -39,7 +39,7 @@ cd `dirname $0`
 # Fasta of pdb-file
 ../bin/fasta input/1mnb.pdb > output/1mnb.fasta
 # Show gaps in fasta-file of chain A
-../bin/extract -c A input/3zev.pdb  | fasta -s > output/3zev_A.fasta
+../bin/extract -c A input/3zev.pdb  | ../bin/fasta -s > output/3zev_A.fasta
 
 ################################################################################
 # RENUMBER                                                                     #
@@ -78,7 +78,7 @@ cd `dirname $0`
 ../bin/insert -f output/1mnb.fasta output/1mnb_remove.pdb \
 	> output/1mnb_insert.pdb
 # Fill missing residues in chain A with GLYcine
-../bin/extract -c A input/3zev.pdb| ../bin/insert -r G > output/3zev_insert.pdb
+../bin/extract -c A input/3zev.pdb | ../bin/insert -r G > output/3zev_insert.pdb
 
 ################################################################################
 # SPLIT_PDB                                                                    #
@@ -115,7 +115,21 @@ cd `dirname $0`
 # remove similar contacts (useful for constraint creation)
 ../bin/contacts -s -o 5 input/1mnb.pdb > output/1mnb.ct
 # Contacts between chain A and B
-../bin/extract -c AB input/3zev.pdb  | contacts -c B > output/3zev.ct
+../bin/extract -c AB input/3zev.pdb | ../bin/contacts -c B > output/3zev.ct
+
+################################################################################
+# THREAD                                                                       #
+################################################################################
+# Thread alignment on pdb
+../bin/extract -c A input/3zev.pdb  | ../bin/renumber \
+	| ../bin/thread -f input/6rz7_3zev.aln > output/6rz7_3zev.pdb
+# Thread alignment on pdb, removing unknown residues
+../bin/extract -c A input/3zev.pdb  | ../bin/renumber \
+	| ../bin/thread -r -f input/6rz7_3zev.aln > output/6rz7_3zev_rm.pdb
+# Thread alignment on pdb, removing unknown residues, print fasta
+../bin/extract -c A input/3zev.pdb  | ../bin/renumber \
+	| ../bin/thread -r -f input/6rz7_3zev.aln \
+	| ../bin/fasta -s > output/6rz7_3zev_rm.fasta
 
 
 ################################################################################

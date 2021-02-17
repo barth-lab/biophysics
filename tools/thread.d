@@ -26,6 +26,7 @@ void main(string[] args) {
 	import std.string;
 
 	bool   non     = false;
+	bool   rm      = false;
 	string fastaFn = "";
 
 	auto opt = getopt(
@@ -34,9 +35,13 @@ void main(string[] args) {
 		"Use non-standard (HETATM) residues",
 		&non,
 
-		"FASTA-filename|f",
-		"FASTA-file to use",
-		&fastaFn);
+		"fasta|f",
+		"alignement FASTA-file to use",
+		&fastaFn,
+
+		"remove|r",
+		"Remove missing residues",
+		&rm);
 
 	if (args.length > 2 || opt.helpWanted) {
 		defaultGetoptPrinter(
@@ -51,7 +56,9 @@ void main(string[] args) {
 
 	auto pdb  = (args.length == 2 ? File(args[1]) : stdin).parse(non);
 	auto atom = pdb.front;
-	char[80] ter = atom;
+
+	char[80] ter   = atom;
+	char[80] empty = GLY;
 
 	auto fasta  = File(fastaFn).fasta;
 	auto target = fasta[0].seq;
@@ -64,6 +71,17 @@ void main(string[] args) {
 			if (!(templ[i] == '-')) ++i_tem;
 		}	
 		else if (templ[i] == '-') {
+			if (!rm) {
+			    empty.resName = target[i].aminoAcids;	
+
+			    foreach (a; ["N", "CA", "C", "O"]) {
+				    empty.name    = a;	
+				    empty.resSeq  = i_tar;
+				    empty.serial  = i_atom++;
+				    empty.element = a[0 .. 1];
+				    writefln("%-80s", empty);
+			    }
+			}
 			++i_tar;
 		}
 		else {

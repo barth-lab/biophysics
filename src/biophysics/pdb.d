@@ -191,6 +191,8 @@ bool isBB(const Atom atom) pure nothrow {
 }
 bool isCB(const Atom atom) pure nothrow { return atom[12 .. 16] == " CB ";}
 
+enum char[80] GLY =  "ATOM      1  CA  GLY A   1       0.000   0.000   0.000 -1.00  0.00           C  ";
+
 ///
 unittest {
 	char[80] buf = "ATOM      2  CA  PRO A  51     -36.257  41.614 -51.758  1.00150.96           C  ";
