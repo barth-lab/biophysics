@@ -48,6 +48,8 @@ cd `dirname $0`
 ../bin/renumber input/1mnb.pdb > output/1mnb_renumber.pdb
 # Renumber pdb-file 10 through N+10
 ../bin/renumber -s 10 input/3zev.pdb > output/3zev_renumber.pdb
+# Renumber pdb-file 3 through N, keep gaps, rename chains WXYZ
+../bin/renumber -k -s 3 -c WXYZ input/3zev.pdb > output/3zev_wxyz.pdb
 
 ################################################################################
 # EXTRACT                                                                      #

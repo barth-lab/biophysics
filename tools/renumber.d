@@ -18,35 +18,40 @@ module tools.renumber;
 import std.algorithm;
 import biophysics.pdb;
 
-auto renumber(Range)(Range atoms, uint start = 1, bool rechain = false,
-                     string chains = "") {
+auto renumber(Range)(Range atoms, int start = 1, bool gaps = false,
+                          bool rechain = false, string chains = "") {
 	import std.range;
 	import std.stdio;
-	start--;	//loop starts with start++;
 
-	uint old_number = 0;
+	int  delta      = 0;
+	int  old_number = start - 1;
+	uint atom_i     = start - 1;
 	char old_chain  = ' ';
 	char chain      = 'A' - 1;
 	int  chain_i    = -1;
 
 	return atoms.map!((atom) {
-		if (atom.resSeq != old_number) {
-			old_number = atom.resSeq;
-			start++;
-		}
 		if (atom.chainID != old_chain) {
 			old_chain = atom.chainID;
+
+			if (gaps) {
+				delta = atom.resSeq - (old_number - delta) - 1;
+			}
 			if (rechain) {
 				chain++;
 			}
-			else if (chain_i < cast(int)(chains.length - 1)) {
+			else if (chain_i < cast(int) chains.length - 1) {
 				chain_i++;	
 			}
 		}
-		if (rechain) atom.chainID = chain;
+		if (atom.resSeq != old_number) {
+			old_number = atom.resSeq;
+			atom_i++;
+		}
+		if (rechain)            atom.chainID = chain;
 		else if (!chains.empty) atom.chainID = chains[chain_i];
 
-		atom.resSeq = start;
+		atom.resSeq = (gaps ? atom.resSeq - delta : atom_i);
 		return atom;
 	});
 }
@@ -61,6 +66,7 @@ void main(string[] args) {
 	bool   non     = false;
 	uint   start   = 1;
 	bool   rechain = false;
+	bool   gaps    = false;
 	string chains  = "";
 
 	auto opt = getopt(
@@ -68,6 +74,7 @@ void main(string[] args) {
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
 		"rechain|r", "Renumber chains A through Z", &rechain,
 		"chains|c", "Use these chainID", &chains,
+		"keep_gaps|k", "keep the gaps", &gaps,
 		"start|s", "Start at this value", &start);
 
 	if (args.length > 2 || opt.helpWanted) {
@@ -81,5 +88,7 @@ void main(string[] args) {
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	file.parse(non).renumber(start, rechain, chains).print;
+	auto pdbs = file.parse(non);
+	pdbs.renumber(start, gaps, rechain, chains).print;
+	//else pdbs.renumber(start, rechain, chains).print;
 }
