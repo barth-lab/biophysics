@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/biophysics
+biophysics.so
+biophysics.dylib
+biophysics.dll
+biophysics.a
+biophysics.lib
+biophysics-test-*
+*.exe
+*.o
+*.obj
+*.lst
