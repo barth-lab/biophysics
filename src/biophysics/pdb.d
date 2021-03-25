@@ -185,6 +185,14 @@ string charge(const Atom atom) pure { return atom[78 .. 80].strip.to!string; }
 void charge(Atom atom, string value) pure { atom[78 .. 80] = value.format!"%2s"; }
 
 bool isH(const Atom atom) pure nothrow { return atom[13] == 'H';}
+
+bool isO(const Atom atom) pure nothrow { return atom[13] == 'O';}
+
+bool isNonPolar(const Atom atom) pure nothrow {
+	immutable nonPolar = ["LEU", "ILE", "VAL", "ALA", "PHE", "MET"];
+	return nonPolar.canFind(atom[17 .. 20]);
+}
+
 bool isBB(const Atom atom) pure nothrow {
 	auto n = atom[12..16];
 	return (n == " N  " || n == " C  " || n == " O  " || n == " CA ");

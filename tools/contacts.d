@@ -95,6 +95,49 @@ double[string] contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
 	return contacts;
 }
 
+double[string] hbonds(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
+	import std.range;
+	import std.format;
+	import std.conv;
+	import std.string;
+
+	double[string] contacts;
+	double[3][] coords2;
+	int[] resSeq2;
+	char[] chain2;
+	bool[] isH2;
+	string[] name2;
+	
+	// a.isH && a.name.length > 2
+	foreach (a2; atoms2) {
+		coords2 ~= [a2.x, a2.y, a2.z];
+		resSeq2 ~= a2.resSeq;
+		chain2  ~= a2.chainID;
+		isH2    ~= a2.isH;
+		name2   ~= a2.name;
+	}
+	foreach (a1; atoms1) {
+		immutable key1 = format("%c%04d", a1.chainID, a1.resSeq);
+		immutable double[3] c1 = [a1.x, a1.y, a1.z];
+		int  resSkip           = 0;
+		bool isH1              = a1.isH;
+		foreach (j; 0..coords2.length) {
+			if (resSeq2[j] == resSkip) continue;
+
+			if (isH1 == isH2[j]) continue;
+
+			immutable d = c1.distance(coords2[j]);
+			if (d > cut_off + 15) resSkip = resSeq2[j];
+			if (d > cut_off) continue;
+			immutable key = format("%s-%c%04d", key1, chain2[j],
+			                       resSeq2[j]);
+			auto dh = contacts.require(key, d);
+			if (dh > d) contacts[key] = d;
+		}
+	}
+	return contacts;
+}
+
 immutable description=
 "Find residue-contacts in PDB-FILE or between PDB-FILE1 and 2 to standard output.";
 
@@ -107,9 +150,9 @@ void main(string[] args) {
 
 	bool   non      = false;
 	bool   rmSim    = false;
+	bool   hbond    = false;
 	double cutoff   = 4.;
 	int    offset   = 1;
-	string to       = "";
 	string residues = "1-9999";
 	string chains   = "";
 
@@ -119,9 +162,9 @@ void main(string[] args) {
 		"Use non-standard (HETATM) residues",
 		&non,
 
-		"to|t",
-		"File to compare to, default = none",
-		&to,
+		"hydrogen_bond|y",
+		"Only consider hydrogen bond contacts",
+		&hbond,
 
 		"chains|c",
 		"CHAINS to use, default = all",
@@ -155,25 +198,23 @@ void main(string[] args) {
 	}
 
 	auto file1 = (args.length == 2 ? File(args[1]) : stdin);
-	auto pdb1  = file1.parse(non).filter!(a => !a.isH);
+	auto pdb1  = file1.parse(non).filter!((a) {
+			if (hbond)
+                                return !a.isNonPolar &&
+					(((a.isH && a.name.length > 2) || a.isO) ||
+                                        a.resName == "HIS" && a.name == "ND1");
+                        else return !a.isH;
+		     });
 	double[string] cs = void;
 
-	if (to.empty) {
-
-		if (!chains.empty) {
-			auto p = pdb1.map!(dup).array;			
-			auto r = p.filter!(a => !chains.canFind(a.chainID));
-			auto c = p.filter!(a => chains.canFind(a.chainID));
-			cs = contacts(r, c, cutoff);
-		}
-		else {
-			cs = contacts(pdb1, cutoff, str2index(residues), offset);	
-		}
+	if (!chains.empty) {
+		auto p = pdb1.map!(dup).array;			
+		auto r = p.filter!(a => !chains.canFind(a.chainID));
+		auto c = p.filter!(a => chains.canFind(a.chainID));
+		cs = (hbond ? hbonds(r, c, cutoff) : contacts(r, c, cutoff));
 	}
 	else {
-		auto pdb2  = File(to).parse(non).filter!(a => !a.isH);
-
-		cs = contacts(pdb1, pdb2, cutoff);
+		cs = contacts(pdb1, cutoff, str2index(residues), offset);
 	}
 
 	auto redundant(string key1, string key2) {
