@@ -188,8 +188,13 @@ bool isH(const Atom atom) pure nothrow { return atom[13] == 'H';}
 
 bool isO(const Atom atom) pure nothrow { return atom[13] == 'O';}
 
+bool isN(const Atom atom) pure nothrow { return atom[13] == 'N';}
+
+bool isC(const Atom atom) pure nothrow { return atom[13] == 'C';}
+
 bool isNonPolar(const Atom atom) pure nothrow {
-	immutable nonPolar = ["LEU", "ILE", "VAL", "ALA", "PHE", "MET"];
+	immutable nonPolar = ["ALA", "CYS", "GLY", "ILE", "LEU",
+			      "MET", "PHE", "PRO", "TRP", "VAL"];
 	return nonPolar.canFind(atom[17 .. 20]);
 }
 

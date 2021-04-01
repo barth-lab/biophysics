@@ -49,7 +49,10 @@ double[string] contacts(R)(R atoms, double cut_off, int[] residues, int offset) 
 			if (!isWanted[i] && !isWanted[j]) continue;
 
 			immutable d = ci.distance(coords[j]);
-			if (d > cut_off + 15) resSkip = resSeqs[j];
+			if (d > cut_off + 15) {
+				resSkip = resSeqs[j];
+				continue;
+			}
 			if (d > cut_off) continue;
 			immutable key = format("%s-%c%04d", keyi, chains[j],
 			                       resSeqs[j]);
@@ -67,72 +70,36 @@ double[string] contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
 	import std.string;
 
 	double[string] contacts;
+
 	double[3][] coords2;
 	int[] resSeq2;
 	char[] chain2;
 	
 	foreach (a2; atoms2) {
-		coords2 ~= [a2.x, a2.y, a2.z];
-		resSeq2 ~= a2.resSeq;
-		chain2  ~= a2.chainID;
-	}
-	foreach (a1; atoms1) {
-		immutable double[3] c1 = [a1.x, a1.y, a1.z];
-		immutable key1    =  format("%c%04d",a1.chainID, a1.resSeq);
-		int       resSkip = 0;
-		foreach (j; 0 .. coords2.length) {
-			if (resSeq2[j] == resSkip) continue;
-
-			immutable d = c1.distance(coords2[j]);
-			if (d > cut_off + 15) resSkip = resSeq2[j];
-			if (d > cut_off) continue;
-			immutable key = format("%s-%c%04d", key1, chain2[j],
-			                       resSeq2[j]);
-			auto dh = contacts.require(key, d);
-			if (dh > d) contacts[key] = d;
-		}
-	}
-	return contacts;
-}
-
-double[string] hbonds(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
-	import std.range;
-	import std.format;
-	import std.conv;
-	import std.string;
-
-	double[string] contacts;
-	double[3][] coords2;
-	int[] resSeq2;
-	char[] chain2;
-	bool[] isH2;
-	string[] name2;
-	
-	// a.isH && a.name.length > 2
-	foreach (a2; atoms2) {
-		coords2 ~= [a2.x, a2.y, a2.z];
-		resSeq2 ~= a2.resSeq;
-		chain2  ~= a2.chainID;
-		isH2    ~= a2.isH;
-		name2   ~= a2.name;
+		coords2  ~= [a2.x, a2.y, a2.z];
+		resSeq2  ~= a2.resSeq;
+		chain2   ~= a2.chainID;
 	}
 	foreach (a1; atoms1) {
 		immutable key1 = format("%c%04d", a1.chainID, a1.resSeq);
+
 		immutable double[3] c1 = [a1.x, a1.y, a1.z];
-		int  resSkip           = 0;
-		bool isH1              = a1.isH;
+		int resSkip            = 0;
 		foreach (j; 0..coords2.length) {
 			if (resSeq2[j] == resSkip) continue;
 
-			if (isH1 == isH2[j]) continue;
-
 			immutable d = c1.distance(coords2[j]);
-			if (d > cut_off + 15) resSkip = resSeq2[j];
+			if (d > cut_off + 15) {
+				resSkip = resSeq2[j];
+				continue;
+			}
 			if (d > cut_off) continue;
 			immutable key = format("%s-%c%04d", key1, chain2[j],
 			                       resSeq2[j]);
 			auto dh = contacts.require(key, d);
-			if (dh > d) contacts[key] = d;
+			if (dh > d) {
+				contacts[key] = d;
+			}
 		}
 	}
 	return contacts;
@@ -167,7 +134,7 @@ void main(string[] args) {
 		&hbond,
 
 		"chains|c",
-		"CHAINS to use, default = all",
+		"contacts to this CHAINS, default = all",
 		&chains,
 
 		"offset|o",
@@ -196,14 +163,9 @@ void main(string[] args) {
 			opt.options);
 		return;
 	}
-
 	auto file1 = (args.length == 2 ? File(args[1]) : stdin);
 	auto pdb1  = file1.parse(non).filter!((a) {
-			if (hbond)
-                                return !a.isNonPolar &&
-					(((a.isH && a.name.length > 2) || a.isO) ||
-                                        a.resName == "HIS" && a.name == "ND1");
-                        else return !a.isH;
+			return !a.isH && (!hbond || (!a.isNonPolar && !a.isC));
 		     });
 	double[string] cs = void;
 
@@ -211,27 +173,25 @@ void main(string[] args) {
 		auto p = pdb1.map!(dup).array;			
 		auto r = p.filter!(a => !chains.canFind(a.chainID));
 		auto c = p.filter!(a => chains.canFind(a.chainID));
-		cs = (hbond ? hbonds(r, c, cutoff) : contacts(r, c, cutoff));
+		cs = contacts(r, c, cutoff);
 	}
 	else {
 		cs = contacts(pdb1, cutoff, str2index(residues), offset);
 	}
-
-	auto redundant(string key1, string key2) {
-		import std.conv;
-		import std.math;
-		immutable i1 = key1[1 .. 5].to!int;
-		immutable j1 = key1[7 .. 11].to!int;
-		immutable i2 = key2[1 .. 5].to!int;
-		immutable j2 = key2[7 .. 11].to!int;
-		if ((abs(i1 - i2) < 4) && (abs(j1 - j2) < 4)) {
-			return true;
-		}
-		return false;
-	}
-
 	string[] keys;
 	if (rmSim) {
+		auto redundant(string key1, string key2) {
+			import std.conv;
+			import std.math;
+			immutable i1 = key1[1 .. 5].to!int;
+			immutable j1 = key1[7 .. 11].to!int;
+			immutable i2 = key2[1 .. 5].to!int;
+			immutable j2 = key2[7 .. 11].to!int;
+			if ((abs(i1 - i2) < 4) && (abs(j1 - j2) < 4)) {
+				return true;
+			}
+			return false;
+		}
 		foreach (k; cs.keys.sort!((k1, k2) => cs[k1] < cs[k2])) {
 			if (keys.any!(kn => redundant(kn, k))) continue;
 			keys ~= k;
@@ -240,7 +200,6 @@ void main(string[] args) {
 	else {
 		keys = cs.keys;
 	}
-
 	foreach (k; keys.sort) {
 		writefln("%s: %5.2f", k, cs[k]);
 	}
