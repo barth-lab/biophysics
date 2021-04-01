@@ -116,7 +116,7 @@ void main(string[] args) {
 		else of.print_chains(fn);
 	    }
 	else if (bydist) {
-		auto of = file.parse(non).splitByDist(4.);
+		auto of = file.parse(non).splitByDist(6.);
 		if (!perchain) of.print;
 		else of.print_chains(fn);
 	}
