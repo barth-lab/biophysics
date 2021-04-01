@@ -14,21 +14,21 @@ alias Fasta = Chain[];
 
 
 char aminoAcids(string threeLetter) {
-	immutable aminoAcids = ["CYS": 'C', "ASP": 'D', "SER": 'S', "GLN": 'Q',
-			    "LYS": 'K', "ILE": 'I', "PRO": 'P', "THR": 'T',
-			    "PHE": 'F', "ASN": 'N', "GLY": 'G', "HIS": 'H',
-			    "LEU": 'L', "ARG": 'R', "TRP": 'W', "ALA": 'A',
-			    "VAL":'V', "GLU": 'E', "TYR": 'Y', "MET": 'M'];
+	immutable aminoAcids = ["ALA": 'A', "ARG": 'R', "ASN": 'N', "ASP": 'D',
+				"CYS": 'C', "GLN": 'Q', "GLU": 'E', "GLY": 'G',
+				"HIS": 'H', "ILE": 'I', "LEU": 'L', "LYS": 'K',
+				"MET": 'M', "PHE": 'F', "PRO": 'P', "SER": 'S',
+				"THR": 'T', "TRP": 'W', "TYR": 'Y', "VAL":'V'];
 	if (auto aa = threeLetter in aminoAcids) return *aa;
 	return 'X';
 }
 
 string aminoAcids(char oneLetter) {
-	immutable aminoAcids = ['C': "CYS", 'D': "ASP", 'S': "SER", 'Q': "GLN",
-				'K': "LYS", 'I': "ILE", 'P': "PRO", 'T': "THR",
-				'F': "PHE", 'N': "ASN", 'G': "GLY", 'H': "HIS",
-				'L': "LEU", 'R': "ARG", 'W': "TRP", 'A': "ALA",
-				'V': "VAL", 'E': "GLU", 'Y': "TYR", 'M': "MET"];
+	immutable aminoAcids = ['A': "ALA", 'C': "CYS", 'D': "ASP", 'E': "GLU",
+				'F': "PHE", 'G': "GLY", 'H': "HIS", 'I': "ILE",
+				'K': "LYS", 'L': "LEU", 'M': "MET", 'N': "ASN",
+				'P': "PRO", 'Q': "GLN", 'R': "ARG", 'S': "SER",
+				'T': "THR", 'V': "VAL", 'W': "TRP", 'Y': "TYR"];
 	if (auto aa = oneLetter in aminoAcids) return *aa;
 	return "X00";
 }
