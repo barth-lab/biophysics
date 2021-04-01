@@ -50,7 +50,7 @@ void main(string[] args) {
 	auto file = (hasFile ? File(fn) : stdin);
 	auto fasta = file.parse.fasta(countGaps);
 
-	writef("#%8s %8s ", "N_chains", "N_restot");
+	//writef("#%8s %8s ", "N_chains", "N_restot");
 	int tot = 0;
 	string schains = "";
 	string sinfo   = "";
@@ -62,6 +62,6 @@ void main(string[] args) {
 		}
 		tot += l;
 	}
-	writeln(sinfo);
+	//writeln(sinfo);
 	writefln("%9d %8d %s", fasta.length, tot, schains);
 }
