@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@epfl.ch>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+cd `dirname $0`
+
+################################################################################
+# Performance test
+################################################################################
+
+printf "#%-7s %-8s %s\n" "t_grep" "t_parse" "N_atoms"
+for f in input/*.pdb; do
+	l=${f#input/}
+	l=${l%.pdb}
+
+	start=`date +%s.%N`
+	for i in {1..100}; do
+		grep -E '^ATOM.{76}$' $f > .tfile
+	done
+	end=`date +%s.%N`
+	t_grep=$( echo "($end - $start)/100" | bc -l )
+
+	start=`date +%s.%N`
+	for i in {1..100}; do
+		../bin/parse $f > .tfile
+	done
+	end=`date +%s.%N`
+	t_parse=$( echo "($end - $start)/100" | bc -l )
+
+	printf "%8.4f %8.4f %s\n" $t_grep $t_parse $l
+done
+rm .tfile
