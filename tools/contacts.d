@@ -118,6 +118,7 @@ void main(string[] args) {
 	bool   non      = false;
 	bool   rmSim    = false;
 	bool   hbond    = false;
+	bool   uniq     = false;
 	double cutoff   = 4.;
 	int    offset   = 1;
 	string residues = "1-9999";
@@ -132,6 +133,10 @@ void main(string[] args) {
 		"hydrogen_bond|y",
 		"Only consider hydrogen bond contacts",
 		&hbond,
+
+		"uniq|u",
+		"Only consider hydrogen bond contacts",
+		&uniq,
 
 		"chains|c",
 		"contacts to this CHAINS, default = all",
@@ -163,17 +168,35 @@ void main(string[] args) {
 			opt.options);
 		return;
 	}
+
+	bool function(Atom a) fi =
+	        (hbond ? (a => !a.isNonPolar && !a.isC && !a.isH)
+	               : (a => !a.isH));
+
 	auto file1 = (args.length == 2 ? File(args[1]) : stdin);
-	auto pdb1  = file1.parse(non).filter!((a) {
-			return !a.isH && (!hbond || (!a.isNonPolar && !a.isC));
-		     });
+	auto pdb1  = file1.parse(non).filter!(fi);
+
 	double[string] cs = void;
 
 	if (!chains.empty) {
+		import std.format;
 		auto p = pdb1.map!(dup).array;			
 		auto r = p.filter!(a => !chains.canFind(a.chainID));
 		auto c = p.filter!(a => chains.canFind(a.chainID));
 		cs = contacts(r, c, cutoff);
+		if (uniq) {
+			auto cResSeqs =
+				c.map!(a => format("%c%04d", a.chainID, a.resSeq))
+				.uniq;
+			foreach (s; cResSeqs) {
+				int count = 0;
+				foreach (k; cs.keys) 
+					if (k.canFind(s)) 
+						count++;
+				writefln("%s %3d", s, count);
+			}
+			return;
+		}
 	}
 	else {
 		cs = contacts(pdb1, cutoff, str2index(residues), offset);
@@ -201,6 +224,6 @@ void main(string[] args) {
 		keys = cs.keys;
 	}
 	foreach (k; keys.sort) {
-		writefln("%s: %5.2f", k, cs[k]);
+		writefln("%s %5.2f", k, cs[k]);
 	}
 }
