@@ -14,8 +14,11 @@ import std.stdio;
 
 /// Parse a pbd-file, including hetatoms or not
 auto parse(File file, bool heterogen=false) {
-	return file.byLine.filter!( l =>
-		l.hasLength && (l.isAtom || (heterogen && l.isHeterogen)));
+	bool function(Atom a) f =
+	        (heterogen
+	                 ? (l => l.hasLength && (l.isAtom || l.isHeterogen))
+	                 : (l => l.hasLength && l.isAtom));
+	return file.byLine.filter!f;
 }
 
 /// Print a pdb-file, including TER lines and END lines
@@ -26,28 +29,31 @@ void print(Range)(Range atoms, File file = stdout) {
 	auto ai = atoms.front;
 	char ch = ai.chainID;
 	int  i  = 1;
-	char[80] old;
+
+	char[80] ter;
+	ter.fill(' ');
+	ter[0..6] = "TER   ";
 
 	for(;;) {
-		if (ai.chainID != ch) {
-			ch         = ai.chainID;
-			old.serial = i++;
-			file.writeln(old[0..$].ter);
+		char chainID_i = ai.chainID;
+		if (chainID_i != ch) {
+			ch         = chainID_i;
+			ter.serial = i++;
+			file.writeln(ter);
 		}
 		ai.serial = i++;
-		old       = ai;
-
-		file.writefln("%-80s", ai);
+		file.writeln(ai);
 		
+		ter[17 .. 27] = ai[17 .. 27];
 		atoms.popFront;
 		if (atoms.empty) {
 			break;
 		}
 		ai = atoms.front;
 	} 
-	old.serial = i;
-	file.writeln(old[0..$].ter);
-	file.writefln("%-80s", "END");
+	ter.serial = i;
+	file.writeln(ter);
+	file.writeln("END                                                                             ");
 }
 
 /// Print each chain to a pdb-file, including TER lines and END lines
@@ -58,25 +64,30 @@ void print_chains(Range)(Range atoms, string filename) {
 	auto ai = atoms.front;
 	char ch = ai.chainID;
 	int  i  = 1;
-	char[80] old;
+
+	char[80] ter;
+	ter.fill(' ');
+	ter[0..6] = "TER   ";
+
 	filename = (filename.empty
 	                    ? filename
 	                    : filename.split(".")[0].split("/")[$ - 1] ~'_');
 	File file = File(filename ~ ch ~ ".pdb", "w");
 
 	for(;;) {
-		if (ai.chainID != ch) {
-			ch         = ai.chainID;
-			old.serial = i++;
-			file.writeln(old[0..$].ter);
-			file.writefln("%-80s", "END");
+		char chainID_i = ai.chainID;
+		if (chainID_i != ch) {
+			ch         = chainID_i;
+			ter.serial = i++;
+			file.writeln(ter);
+			file.writeln("END                                                                             ");
 			file.close;
 			file.open(filename ~ ch ~ ".pdb", "w");
 		}
-		ai.serial = i++;
-		old       = ai;
+		ai.serial     = i++;
+		ter[17 .. 27] = ai[17 .. 27];
 
-		file.writefln("%-80s", ai);
+		file.writeln(ai);
 		
 		atoms.popFront;
 		if (atoms.empty) {
@@ -84,9 +95,9 @@ void print_chains(Range)(Range atoms, string filename) {
 		}
 		ai = atoms.front;
 	} 
-	old.serial = i;
-	file.writeln(old[0..$].ter);
-	file.writefln("%-80s", "END");
+	ter.serial = i;
+	file.writeln(ter);
+	file.writeln("END                                                                             ");
 }
 
 /// TER line of pdb
