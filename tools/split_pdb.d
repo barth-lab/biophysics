@@ -22,9 +22,9 @@ auto splitByDist(Range)(lazy Range atoms, double dist) {
 	import std.stdio;
 
 	char[80] old;
-	old.x           = 1e6;
-	old.y           = 1e6;
-	old.z           = 1e6;
+	old.x           = 9e3;
+	old.y           = 9e3;
+	old.z           = 9e3;
 	char chain      = 'A' - 1;
 	char old_chain  = 'A' - 1;
 	uint old_number = 0;

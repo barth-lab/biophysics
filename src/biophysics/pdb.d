@@ -15,9 +15,8 @@ import std.stdio;
 /// Parse a pbd-file, including hetatoms or not
 auto parse(File file, bool heterogen=false) {
 	bool function(Atom a) f =
-	        (heterogen
-	                 ? (l => l.hasLength && (l.isAtom || l.isHeterogen))
-	                 : (l => l.hasLength && l.isAtom));
+	        (heterogen ? (l => l.hasLength && (l.isAtom || l.isHeterogen))
+	                   : (l => l.hasLength && l.isAtom));
 	return file.byLine.filter!f;
 }
 
@@ -145,8 +144,8 @@ bool isHeterogen(char[] l) pure nothrow { return l[0 .. 6] == "HETATM"; }
 /// Pseudo-Atom-type
 alias Atom = char[];
 
-uint serial(const Atom atom) pure { return atom[6 .. 11].strip.to!uint; }
-void serial(Atom atom, uint value) pure { atom[6 .. 11] = value.format!"%5u"; }
+uint serial(const Atom atom) pure { return atom[6 .. 11].stripLeft.to!uint; }
+void serial(Atom atom, uint value) pure { atom[6 .. 11].sformat!"%5u"(value); }
 
 string name(const Atom atom) pure { return atom[12 .. 16].strip.to!string; }
 void name(Atom atom, string value) pure {
@@ -155,10 +154,10 @@ void name(Atom atom, string value) pure {
 		atom[12 .. 16] = value[0 .. 4];
 	}
 	else if (value[0].isDigit ) {
-		atom[12 .. 16] = format!"%-4s"(value);
+		atom[12 .. 16].sformat!"%-4s"(value);
 	}
 	else {
-		atom[12 .. 16] = format!" %-3s"(value);
+		atom[12 .. 16].sformat!" %-3s"(value);
 	}
 }
 
@@ -166,34 +165,34 @@ char altLoc(const Atom atom) pure nothrow { return atom[16]; }
 void altLoc(Atom atom, char value) pure nothrow { atom[16] = value; }
 
 string resName(const Atom atom) pure { return atom[17 .. 20].to!string; }
-void resName(Atom atom, string value) pure { atom[17 .. 20] = value.format!"%3s"; }
+void resName(Atom atom, string value) pure { atom[17 .. 20].sformat!"%3s"(value); }
 
 char chainID(const Atom atom) pure nothrow { return atom[21]; }
 void chainID(Atom atom, char value) pure { atom[21] = value; }
 
-uint resSeq(const Atom atom) pure { return atom[22 .. 26].strip.to!uint; }
-void resSeq(Atom atom, uint value) pure { atom[22 .. 26] = value.format!"%4u"; }
+uint resSeq(const Atom atom) pure { return atom[22 .. 26].stripLeft.to!uint; }
+void resSeq(Atom atom, uint value) pure { atom[22 .. 26].sformat!"%4u"(value); }
 
 char iCode(const Atom atom) pure nothrow { return atom[26]; }
 void iCode(Atom atom, char value) pure nothrow { atom[26] = value; }
 
-double x(const Atom atom) pure { return atom[30 .. 38].strip.to!double; }
-void x(Atom atom, double value) { atom[30 .. 38] = value.format!"%8.3f"; }
-double y(const Atom atom) pure { return atom[38 .. 46].strip.to!double; }
-void y(Atom atom, double value) { atom[38 .. 46] = value.format!"%8.3f"; }
-double z(const Atom atom) pure { return atom[46 .. 54].strip.to!double; }
-void z(Atom atom, double value) { atom[46 .. 54] = value.format!"%8.3f"; }
+double x(const Atom atom) pure { return atom[30 .. 38].stripLeft.to!double; }
+void x(Atom atom, double value) { atom[30 .. 38].sformat!"%8.3f"(value); }
+double y(const Atom atom) pure { return atom[38 .. 46].stripLeft.to!double; }
+void y(Atom atom, double value) { atom[38 .. 46].sformat!"%8.3f"(value); }
+double z(const Atom atom) pure { return atom[46 .. 54].stripLeft.to!double; }
+void z(Atom atom, double value) { atom[46 .. 54].sformat!"%8.3f"(value); }
 
-double occupancy(const Atom atom) pure { return atom[54 .. 60].strip.to!double; }
-void occupancy(Atom atom, double value) { atom[54 .. 60] = value.format!"%6.2f"; }
-double tempFactor(const Atom atom) pure { return atom[60 .. 66].strip.to!double; }
-void tempFactor(Atom atom, double value) { atom[60 .. 66] = value.format!"%6.2f"; }
+double occupancy(const Atom atom) pure { return atom[54 .. 60].stripLeft.to!double; }
+void occupancy(Atom atom, double value) { atom[54 .. 60].sformat!"%6.2f"(value); }
+double tempFactor(const Atom atom) pure { return atom[60 .. 66].stripLeft.to!double; }
+void tempFactor(Atom atom, double value) { atom[60 .. 66].sformat!"%6.2f"(value); }
 
 string element(const Atom atom) pure { return atom[76 .. 78].strip.to!string; }
-void element(Atom atom, string value) pure { atom[76 .. 78] = value.format!"%2s"; }
+void element(Atom atom, string value) pure { atom[76 .. 78].sformat!"%2s"(value); }
 
 string charge(const Atom atom) pure { return atom[78 .. 80].strip.to!string; }
-void charge(Atom atom, string value) pure { atom[78 .. 80] = value.format!"%2s"; }
+void charge(Atom atom, string value) pure { atom[78 .. 80].sformat!"%2s"(value); }
 
 bool isH(const Atom atom) pure nothrow { return atom[13] == 'H';}
 
@@ -206,7 +205,8 @@ bool isC(const Atom atom) pure nothrow { return atom[13] == 'C';}
 bool isNonPolar(const Atom atom) pure nothrow {
 	immutable nonPolar = ["ALA", "CYS", "GLY", "ILE", "LEU",
 			      "MET", "PHE", "PRO", "TRP", "VAL"];
-	return nonPolar.canFind(atom[17 .. 20]);
+	auto r = atom[17 .. 20];
+	return nonPolar.canFind(r);
 }
 
 bool isBB(const Atom atom) pure nothrow {
