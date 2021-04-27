@@ -213,7 +213,10 @@ bool isBB(const Atom atom) pure nothrow {
 	auto n = atom[12..16];
 	return (n == " N  " || n == " C  " || n == " O  " || n == " CA ");
 }
+
 bool isCB(const Atom atom) pure nothrow { return atom[12 .. 16] == " CB ";}
+
+bool isCA(const Atom atom) pure nothrow { return atom[12 .. 16] == " CA ";}
 
 enum char[80] GLY =  "ATOM      1  CA  GLY A   1       0.000   0.000   0.000 -1.00  0.00           C  ";
 

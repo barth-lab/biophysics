@@ -40,7 +40,7 @@ auto rotate(Range)(Range atoms, double[3] angles, string chains) {
 	auto chs = all.filter!(a => chains.canFind(a.chainID));
 	auto com = [0., 0., 0.].sliced;
 	double[] raw;
-	foreach (i, a; chs.enumerate) {
+	foreach (a; chs.filter!(a => a.isBB)) {
 		immutable x = a.x;
 		immutable y = a.y;
 		immutable z = a.z;
@@ -63,9 +63,9 @@ auto rotate(Range)(Range atoms, double[3] angles, string chains) {
 	}
 	foreach(i, a; chs.enumerate) {
 		double[4] p = [0,
-			      crds[i][0] - com[0],
-			      crds[i][1] - com[1],
-			      crds[i][2] - com[2]];
+			      a.x - com[0],
+			      a.y - com[1],
+			      a.z - com[2]];
 		foreach (j; js) {
 			p    = quat_mul(quat_mul(qs[j], p), q_1s[j]);
 			p[0] = 0;
