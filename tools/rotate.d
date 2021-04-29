@@ -49,7 +49,7 @@ auto rotate(Range)(Range atoms, double[3] angles, string chains) {
 	}
 	auto crds = raw.sliced(raw.length/3, 3);
 	com[]    /= (crds.length);
-	auto pca  = crds.pca;
+	auto ev  = crds.pca.coeff.transposed;
 
 	double[4][3] qs;
 	double[4][3] q_1s;
@@ -57,7 +57,7 @@ auto rotate(Range)(Range atoms, double[3] angles, string chains) {
 	foreach (j, ang; angles[].enumerate) {
 		if (ang.isNaN) continue;
 		js     ~= j;
-		auto vj = pca.coeff[j][] * sin(ang / 2);
+		auto vj = ev[j][] * sin(ang / 2);
 		qs[j]   = [cos(ang / 2), vj[0], vj[1], vj[2]];
 		q_1s[j] = [cos(ang / 2), -vj[0], -vj[1], -vj[2]];
 	}
