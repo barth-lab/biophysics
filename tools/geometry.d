@@ -19,15 +19,14 @@ module tools.pca;
 import std.algorithm;
 import biophysics.pdb;
 
-auto geometry(Range)(Range atoms) {
+string geometry(Range)(Range atoms) {
 	import std.math;
 	import std.array;
 	import std.range;
-	import std.stdio;
 	import mir.ndslice;
 	import kaleidic.lubeck;
 	import mir.math.sum;
-	import std.typecons;
+	import std.format;
 
 	auto com = [0., 0., 0.].sliced;
 	double[] raw;
@@ -41,7 +40,15 @@ auto geometry(Range)(Range atoms) {
 	auto crds = raw.sliced(raw.length/3, 3);
 	com[]    /= (crds.length);
 	auto p  = crds.pca;
-	return tuple(com, p.latent, p.coeff.transposed);
+	auto w  = p.latent;
+	auto v  = p.coeff.transposed;
+	string s = "";
+	s ~= format("%8.3f %8.3f %8.3f ",com[0], com[1], com[2]);
+	s ~= format("%8.3f %8.3f %8.3f ",w[0], w[1], w[2]);
+	foreach (i; 0 .. 2) {
+		s ~= format("%8.3f %8.3f %8.3f ",v[i][0], v[i][1], v[i][2]);
+	}
+	return s;
 }
 
 immutable description=
@@ -70,9 +77,5 @@ void main(string[] args) {
 		return;
 	}
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	auto g = file.parse(non).geometry;
-	foreach (gi; g) 
-		foreach (v; gi) 
-			writef("%8.3f ", v);
-	writeln();
+	file.parse(non).geometry.writeln;
 }
