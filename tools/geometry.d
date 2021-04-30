@@ -45,7 +45,7 @@ string geometry(Range)(Range atoms) {
 	string s = "";
 	s ~= format("%8.3f %8.3f %8.3f ",com[0], com[1], com[2]);
 	s ~= format("%8.3f %8.3f %8.3f ",w[0], w[1], w[2]);
-	foreach (i; 0 .. 2) {
+	foreach (i; 0 .. 3) {
 		s ~= format("%8.3f %8.3f %8.3f ",v[i][0], v[i][1], v[i][2]);
 	}
 	return s;
