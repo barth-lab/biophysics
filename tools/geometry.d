@@ -30,7 +30,7 @@ string geometry(Range)(Range atoms) {
 
 	auto com = [0., 0., 0.].sliced;
 	double[] raw;
-	foreach (a; atoms.filter!(a => a.isBB)) {
+	foreach (a; atoms.filter!(a => a.isCA)) {
 		immutable x = a.x;
 		immutable y = a.y;
 		immutable z = a.z;
@@ -52,7 +52,7 @@ string geometry(Range)(Range atoms) {
 }
 
 immutable description=
-"Rotate chains of PDB-FILE around three major axis and write to standard output.";
+"Print the geometric properties COM, eigenvalues and eigenvectors of PDB-FILE to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
