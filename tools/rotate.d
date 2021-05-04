@@ -40,7 +40,7 @@ auto rotate(Range)(Range atoms, double[3] angles, string chains) {
 	auto chs = all.filter!(a => chains.canFind(a.chainID));
 	auto com = [0., 0., 0.].sliced;
 	double[] raw;
-	foreach (a; chs.filter!(a => a.isBB)) {
+	foreach (a; chs.filter!(a => a.isCA)) {
 		immutable x = a.x;
 		immutable y = a.y;
 		immutable z = a.z;
