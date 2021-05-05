@@ -18,13 +18,13 @@ module tools.polar;
 
 import biophysics.pdb;
 
-int[string] countPolarContacts(R1, R2)(R1 from, R2 to, double cut_off) {
+bool[string] countPolarContacts(R1, R2)(R1 from, R2 to, double cut_off) {
 	import std.range;
 	import std.format;
 	import std.conv;
 	import std.string;
 
-	int[string] contacts;
+	bool[string] contacts;
 
 	double[3][] coords2;
 	int[] resSeq2;
@@ -39,7 +39,7 @@ int[string] countPolarContacts(R1, R2)(R1 from, R2 to, double cut_off) {
 		if (a.isNonPolar || a.isH || a.isBB || a.isC) continue;
 
 		immutable key1 = format("%c%04d/%s", a.chainID, a.resSeq, a.name);
-		contacts[key1] = 0;
+		contacts[key1] = false;
 
 		immutable double[3] c1 = [a.x, a.y, a.z];
 		int resSkip            = 0;
@@ -51,16 +51,21 @@ int[string] countPolarContacts(R1, R2)(R1 from, R2 to, double cut_off) {
 				resSkip = resSeq2[j];
 				continue;
 			}
-			if (d > cut_off) continue;
-			contacts[key1]++;
-			//break;
+			if (d < cut_off) {
+				contacts[key1] = true;
+				break;
+			}
 		}
 	}
 	return contacts;
 }
 
 immutable description=
-"Find residue-contacts in PDB-FILE or between PDB-FILE1 and 2 to standard output.";
+"List polar atoms of CHAINs of PDB-FILE standard output.";
+
+immutable extra =
+"First column is amino-acid/atom-name, second column is 1 if polar
+atom has a hydrogen bond, 0 otherwise.";
 
 void main(string[] args) {
 	import std.getopt;
@@ -70,7 +75,6 @@ void main(string[] args) {
 	import biophysics.util;
 
 	double cutoff   = 3.5;
-	string residues = "1-9999";
 	string chains   = "";
 
 	auto opt = getopt(
@@ -79,10 +83,6 @@ void main(string[] args) {
 		"contacts to this CHAINS, default = all",
 		&chains,
 
-		"residues|r",
-		"Contact must include this residue, default = all",
-		&residues,
-
 		"cutoff-distance|d",
 		"Contact cutoff-distance, default = 3.5A",
 		&cutoff);
@@ -90,11 +90,12 @@ void main(string[] args) {
 	if (args.length > 2 || args.length == 0 || opt.helpWanted) {
 		defaultGetoptPrinter(
 			"Usage: " ~ args[0]
-			~ " [OPTIONS]... FILE1 [FILE2]\n"
+			~ " [OPTIONS]... FILE -c CHAINS\n"
 			~ description
 			~ "\n\nWith no FILE2, or when FILE2 is --,"
 			~ " read standard input.\n",
 			opt.options);
+		writeln("\n" ~ extra);
 		return;
 	}
 
@@ -105,6 +106,6 @@ void main(string[] args) {
 	auto cs   = countPolarContacts(c, r, cutoff);
 
 	foreach (k; cs.keys.sort) {
-		writefln("%-10s %2d", k, cs[k]);
+		writefln("%-10s %b", k, cs[k]);
 	}
 }
