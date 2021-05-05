@@ -7,7 +7,6 @@
 	dependency "biophysics" version="*" path=".."
 +/
 
-
 /* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -18,6 +17,11 @@ module tools.contacts;
 
 import biophysics.pdb;
 
+/**
+   Contacts between residues within `cut_off`. One of the reisudes
+   must lied within `residues` And the minimal residue-number distance
+   must be `offset`.
+ */
 double[string] contacts(R)(R atoms, double cut_off, int[] residues, int offset) {
 	import std.algorithm;
 	import std.range;
@@ -38,17 +42,18 @@ double[string] contacts(R)(R atoms, double cut_off, int[] residues, int offset) 
 		if (residues.canFind(resSeqs[$ -1])) isWanted ~= true;
 		else isWanted ~= false;
 	}
-	foreach (i; 0 .. coords.length) {
+	foreach (i; 0 .. coords.length - 1) {
 		immutable double[3] ci = coords[i];
+
 		immutable resSeqi = resSeqs[i];
-		immutable keyi    =  format("%c%04d",chains[i], resSeqi);
+		immutable keyi    = format("%c%04d",chains[i], resSeqi);
 		int       resSkip = 0;
 		foreach (j; i .. coords.length) {
 			if (resSeqs[j] <= resSeqi + offset) continue;
 			if (resSeqs[j] == resSkip) continue;
 			if (!isWanted[i] && !isWanted[j]) continue;
 
-			immutable d = ci.distance(coords[j]);
+			immutable d = distance(ci, coords[j]);
 			if (d > cut_off + 15) {
 				resSkip = resSeqs[j];
 				continue;
@@ -56,6 +61,7 @@ double[string] contacts(R)(R atoms, double cut_off, int[] residues, int offset) 
 			if (d > cut_off) continue;
 			immutable key = format("%s-%c%04d", keyi, chains[j],
 			                       resSeqs[j]);
+
 			auto dh = contacts.require(key, d);
 			if (dh > d) contacts[key] = d;
 		}
@@ -63,37 +69,42 @@ double[string] contacts(R)(R atoms, double cut_off, int[] residues, int offset) 
 	return contacts;
 }
 
-double[string] contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
+/// Contacts between residues `from` and `to` within `cut_off`.
+double[string] contacts(R1, R2)(R1 from, R2 to, double cut_off, bool polar=false) {
 	import std.range;
 	import std.format;
 	import std.conv;
 	import std.string;
 
 	double[string] contacts;
-
 	double[3][] coords2;
 	int[] resSeq2;
 	char[] chain2;
 	
-	foreach (a2; atoms2) {
-		coords2  ~= [a2.x, a2.y, a2.z];
-		resSeq2  ~= a2.resSeq;
-		chain2   ~= a2.chainID;
-	}
-	foreach (a1; atoms1) {
-		immutable key1 = format("%c%04d", a1.chainID, a1.resSeq);
+	foreach (a; to) {
+		if (polar && a.isC) continue;
 
-		immutable double[3] c1 = [a1.x, a1.y, a1.z];
+		coords2  ~= [a.x, a.y, a.z];
+		resSeq2  ~= a.resSeq;
+		chain2   ~= a.chainID;
+	}
+	foreach (a; from) {
+		if (polar && (a.isNonPolar || a.isBB || a.isC)) continue;
+
+		immutable key1 = format("%c%04d", a.chainID, a.resSeq);
+
+		immutable double[3] ci = [a.x, a.y, a.z];
 		int resSkip            = 0;
 		foreach (j; 0..coords2.length) {
 			if (resSeq2[j] == resSkip) continue;
 
-			immutable d = c1.distance(coords2[j]);
+			immutable d = distance(ci, coords2[j]);
 			if (d > cut_off + 15) {
 				resSkip = resSeq2[j];
 				continue;
 			}
 			if (d > cut_off) continue;
+
 			immutable key = format("%s-%c%04d", key1, chain2[j],
 			                       resSeq2[j]);
 			auto dh = contacts.require(key, d);
@@ -106,7 +117,7 @@ double[string] contacts(R1, R2)(R1 atoms1, R2 atoms2, double cut_off) {
 }
 
 immutable description=
-"Find residue-contacts in PDB-FILE or between PDB-FILE1 and 2 to standard output.";
+"Find residue-contacts in PDB-FILE1 or between PDB-FILE1 and 2 to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
@@ -117,8 +128,7 @@ void main(string[] args) {
 
 	bool   non      = false;
 	bool   rmSim    = false;
-	bool   hbond    = false;
-	bool   uniq     = false;
+	bool   polar    = false;
 	double cutoff   = 4.;
 	int    offset   = 1;
 	string residues = "1-9999";
@@ -130,16 +140,12 @@ void main(string[] args) {
 		"Use non-standard (HETATM) residues",
 		&non,
 
-		"hydrogen_bond|y",
-		"Only consider hydrogen bond contacts",
-		&hbond,
-
-		"uniq|u",
-		"Only consider hydrogen bond contacts",
-		&uniq,
+		"polar|p",
+		"Only consider polar (hydrogen bond) contacts",
+		&polar,
 
 		"chains|c",
-		"contacts to this CHAINS, default = all",
+		"contacts from this CHAINS, default = all",
 		&chains,
 
 		"offset|o",
@@ -169,37 +175,19 @@ void main(string[] args) {
 		return;
 	}
 
-	bool function(Atom a) fi =
-	        (hbond ? (a => !a.isNonPolar && !a.isC && !a.isH)
-	               : (a => !a.isH));
-
-	auto file1 = (args.length == 2 ? File(args[1]) : stdin);
-	auto pdb1  = file1.parse(non).filter!(fi);
+	auto file = (args.length == 2 ? File(args[1]) : stdin);
+	auto pdb  = file.parse(non).filter!(a => !a.isH);
 
 	double[string] cs = void;
 
 	if (!chains.empty) {
-		import std.format;
-		auto p = pdb1.map!(dup).array;			
-		auto r = p.filter!(a => !chains.canFind(a.chainID));
-		auto c = p.filter!(a => chains.canFind(a.chainID));
-		cs = contacts(r, c, cutoff);
-		if (uniq) {
-			auto cResSeqs =
-				c.map!(a => format("%c%04d", a.chainID, a.resSeq))
-				.uniq;
-			foreach (s; cResSeqs) {
-				int count = 0;
-				foreach (k; cs.keys) 
-					if (k.canFind(s)) 
-						count++;
-				writefln("%s %3d", s, count);
-			}
-			return;
-		}
+		auto p    = pdb.map!(dup).array;			
+		auto from = p.filter!(a => chains.canFind(a.chainID));
+		auto to   = p.filter!(a => !chains.canFind(a.chainID));
+		cs = contacts(from, to, cutoff, polar);
 	}
 	else {
-		cs = contacts(pdb1, cutoff, str2index(residues), offset);
+		cs = contacts(pdb, cutoff, str2index(residues), offset);
 	}
 	string[] keys;
 	if (rmSim) {
