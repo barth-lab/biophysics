@@ -128,8 +128,8 @@ unittest {
 	immutable double[3] c1 = [1, 1, 1];
 	immutable double[3] c2 = [1, 2, 1];
 	immutable double[3] c3 = [2, 2, 2];
-	assert(distance(c1, c2).approxEqual(1.));
-	assert(distance(c1, c3).approxEqual(sqrt(3.)));
+	assert(distance(c1, c2).isClose(1.));
+	assert(distance(c1, c3).isClose(sqrt(3.)));
 }
 
 /// Has an atom-line the correct length
