@@ -7,6 +7,7 @@
 	dependency "biophysics" version="*" path=".."
 +/
 
+
 /* Copyright (C) 2020 Andreas Füglistaler <andreas.fueglistaler@gmail.com>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -17,32 +18,33 @@ module tools.within;
 
 import biophysics.pdb;
 
-immutable description=
-"Find residues in PDB-FILE within DISTANCE of chain/residues to standard output.";
-
-auto within(R1, R2)(R1 from, R2 to, double distance) {
-	import std.algorithm;
-	import std.math;
-	import std.range;
-	import std.stdio;
-	double[3][] coords;
+int[] within(R1, R2)(R1 from, R2 to, double dist) {
+	int[] rnums;
+	double[3][] coords2;
+	int[] resSeq2;
+	
 	foreach (a; to) {
-		coords  ~= [a.x, a.y, a.z];
+		if (!a.isCA) continue;
+		coords2  ~= [a.x, a.y, a.z];
+		resSeq2  ~= a.resSeq;
 	}
-	int[] res = [0];
-	foreach (ai; from) {
-		auto rs = ai.resSeq;
+	foreach (a; from) {
+		if (!a.isCA) continue;
 
-		immutable double[3] ci = [ai.x, ai.y, ai.z];
-		foreach (cj; coords) {
-			if ((res[$ - 1] == rs)) break;
-			if (ci.distance(cj) < distance) {
-				res ~= rs;
-			}	
+		immutable double[3] crd = [a.x, a.y, a.z];
+		foreach (j; 0..coords2.length) {
+			immutable d = distance(crd, coords2[j]);
+			if (d < dist) {
+				rnums ~= a.resSeq;
+				break;
+			}
 		}
 	}
-	return res[1 .. $];
+	return rnums;
 }
+
+immutable description=
+"List all atoms of PDB-FILE within DISTANCE of CHAINs to standard output.";
 
 void main(string[] args) {
 	import std.getopt;
@@ -50,28 +52,28 @@ void main(string[] args) {
 	import std.stdio;
 	import std.array;
 
-	bool   non      = false;
-	double distance = 4.;
-	string chains   = "B";
+	double dist   = 15;
+	string chains = "";
+	bool   list   = false;
 
 	auto opt = getopt(
 		args,
-		"hetatm|n",
-		"Use non-standard (HETATM) residues",
-		&non,
+		"chains|c",
+		"contacts to this CHAINS, default = all",
+		&chains,
+
+		"list|l",
+		"list all contacts, default = all",
+		&list,
 
 		"distance|d",
-		"Within this DISTANCE",
-		&distance,
-
-		"chains|c",
-		"CHAINS to use, default = all",
-		&chains);
+		"Contact cutoff-distance, default = 15A",
+		&dist);
 
 	if (args.length > 2 || args.length == 0 || opt.helpWanted) {
 		defaultGetoptPrinter(
 			"Usage: " ~ args[0]
-			~ " [OPTIONS]... FILE1 [FILE2]\n"
+			~ " [OPTIONS]... FILE -c CHAINS\n"
 			~ description
 			~ "\n\nWith no FILE2, or when FILE2 is --,"
 			~ " read standard input.\n",
@@ -79,17 +81,17 @@ void main(string[] args) {
 		return;
 	}
 
-	auto file  = (args.length == 2 ? File(args[1]) : stdin);
-	auto pdb   = file.parse(non)
-		       .map!dup
-		       .array;
-	auto from  = pdb.filter!(a => !chains.canFind(a.chainID));
-	auto to    = pdb.filter!(a => chains.canFind(a.chainID));
-	string sout = "";
-	import std.format;
-	foreach (res; within(from, to, distance)) {
-		sout ~= format("%d", res);
-		sout ~= ',';
+	auto file = (args.length == 2 ? File(args[1]) : stdin);
+	auto pdb  = file.parse.map!(dup).array;
+	auto from = pdb.filter!(a => !chains.canFind(a.chainID));
+	auto to   = pdb.filter!(a => chains.canFind(a.chainID));
+	auto res  = within(from, to, dist);
+
+	string so = "";
+	foreach (r; res) {
+		import std.conv;
+		so ~= r.to!string ~ ',';
 	}
-	if (!sout.empty) writeln(sout[0 .. $-1]);
+	writeln(so[0 .. $ - 1]);
+
 }
