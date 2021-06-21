@@ -51,6 +51,7 @@ void main(string[] args) {
 	import std.algorithm;
 	import std.stdio;
 	import std.array;
+	import biophysics.util;
 
 	double dist   = 15;
 	string chains = "";
@@ -87,11 +88,5 @@ void main(string[] args) {
 	auto to   = pdb.filter!(a => chains.canFind(a.chainID));
 	auto res  = within(from, to, dist);
 
-	string so = "";
-	foreach (r; res) {
-		import std.conv;
-		so ~= r.to!string ~ ',';
-	}
-	writeln(so[0 .. $ - 1]);
-
+	res.index2str.writeln;
 }

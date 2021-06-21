@@ -26,7 +26,7 @@ void main(string[] args) {
 	import std.string;
 	import std.algorithm;
 	import std.range;
-	import std.conv;
+	import biophysics.util;
 
 	bool non      = false;
 	bool showGaps = false;
@@ -62,26 +62,5 @@ void main(string[] args) {
 	foreach (i, r; res.enumerate) {
 		if (r == '-') rnums ~= cast(int) i+1;
 	}
-	if (rnums.empty) return;
-
-	int iLast = rnums[0];
-	int i_1   = rnums[0];
-	string sout = iLast.to!string;
-	foreach (i; rnums[1 .. $]) {
-		if (i - i_1== 1) {
-			i_1= i;	
-		}
-		else {
-			if (i_1 != iLast) {
-				sout ~= '-' ~ i_1.to!string;
-			}		
-			sout ~= ',' ~ i.to!string;
-			iLast = i;
-			i_1   = i;
-		}
-	}
-	if (i_1 != iLast) {
-		sout ~= '-' ~ i_1.to!string;
-	}		
-	sout.writeln;
+	rnums.index2str.writeln;
 }

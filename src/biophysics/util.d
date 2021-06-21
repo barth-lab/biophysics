@@ -37,3 +37,38 @@ unittest {
 	assert(str2index("1,2-5,11,15,") == [1,2,3,4,5,11,15]);
 	assert(str2index("2-5,11,15,1") == [2,3,4,5,11,15,1]);
 }
+
+string index2str(const int[] index) pure {
+	import std.range;
+	import std.conv;
+
+	if (index.empty) return "";
+
+	int iLast = index[0];
+	int i_1   = index[0];
+	string sout = iLast.to!string;
+	foreach (i; index[1 .. $]) {
+		if (i - i_1== 1) {
+			i_1= i;	
+		}
+		else {
+			if (i_1 != iLast) {
+				sout ~= '-' ~ i_1.to!string;
+			}		
+			sout ~= ',' ~ i.to!string;
+			iLast = i;
+			i_1   = i;
+		}
+	}
+	if (i_1 != iLast) {
+		sout ~= '-' ~ i_1.to!string;
+	}		
+	return sout;
+}
+///
+unittest {
+	assert(index2str([]) == "");
+	assert(index2str([1]) == "1");
+	assert(index2str([1,2,3,4,5,11,15]) == "1-5,11,15");
+	assert(index2str([2,3,4,5,11,15, 1]) == "2-5,11,15,1");
+}
