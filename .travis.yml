@@ -1,0 +1,13 @@
+language: d
+
+script:
+    - ./install
+    - ./test
+
+addons:
+    apt:
+        packages:
+            - liblapack-dev libopenblas-dev
+
+notifications:
+    email: false

@@ -1,4 +1,6 @@
 * biophysics
+[[https://travis-ci.com/github/glis-glis/biophysics][https://api.travis-ci.com/glis-glis/biophysics.svg?branch=master]]
+
 biophysics provides a library for parsing protein-files and a set of
 command-line tools for common protein manipulation operations.
 
