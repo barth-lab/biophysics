@@ -1,27 +1,90 @@
 * biophysics
-Library and tools for parsing and modifying biophysical files. 
-* Usage
-** Clone a Copy
+biophysics provides a library for parsing protein-files and a set of
+command-line tools for common protein manipulation operations.
+
+It has been developed by Andreas Füglistaler at the Laboratory of
+Protein and Cell Engineering, EPFL
+([[https://www.epfl.ch/labs/barth-lab/]]).
+** Installation
+*** D language
+    The biophysics library and tools have been developed in D
+    ([[https://dlang.org]]). A D-compiler and the package/build manager
+    dub are needed to install the tools
+    ([[https://dlang.org/download.html]]).
+*** Download and compile
+    Get a local copy of biophysics
+    #+BEGIN_SRC
+ $ git clone https://github.com/glis-glis/biophysics.git
+    #+END_SRC
+    Install the binaries
+    #+BEGIN_SRC
+ $ cd biophysics
+ $ ./install
+    #+END_SRC
+    Run tests
+    #+BEGIN_SRC
+ $ ./test
+    #+END_SRC
+   The source files of the library are in the [[src/biophysics]] folder,
+   the source files of the tools in the [[tools]] folder. The shared
+   library will be installed in the [[lib]] folder and the binaries in
+   the [[bin]] folder.
+** Tools   
+   Each tool has a help, which can be evoked with the command-line
+   option ~--help~. The tools take a protein-file as input, and write
+   the result to the standard output. This allows chaining different
+   tools using pipes. For example, extracting chains A and C, renaming
+   them to A and B, and calculating all contacts between the two
+   chains can be done as follows:
    #+BEGIN_SRC
-$ git clone https://github.com/glis-glis/biophysics.git
+$ extract -c BD my.pdb | renumber -r | contacts -c B 
    #+END_SRC
-** Compile Binaries
-   #+BEGIN_SRC
-$ ./install
-   #+END_SRC
-** Tools
-   All tools are in the ~bin~ folder and the corresponding source file
-   in the ~tools~ folder. Each tool has a help, which can be evoked
-   by ~bin/script --help~
-* Design Choices
-** Do One Thing and Do It Well
-   Each tool can only do one thing, but does it very fast. Tools can
-   be piped together to achieve more complicated operations
-** Data is Flat
-   Even though a protein can be viewed as a tree (a protein consists
-   of chains, a chain consists of residues, a residue consists of
-   atoms), the internal representation is a flat table of atoms. This
-   helps for data locality and makes lazy data easier.
-** Lazy data
-   Data is handled lazily, that is, it is only evaluated when needed,
-   for example when printing.
+   Example usage of all tools is shown in the file [[examples/run_examples]].
+*** List
+   | ~align~     | Align pdb-file to another one                            |
+   | ~contacts~  | Find contacting residues                                 |
+   | ~extract~   | Extract chains and/or residues                           |
+   | ~fasta~     | Get sequence of protein                                  |
+   | ~geometry~  | Center of Mass, Eigenvalues and Eigenvectors             |
+   | ~insert~    | Insert missing residues                                  |
+   | ~loops~     | Print loop residues, not in secondary structure          |
+   | ~missing~   | Print all missing residues-numbers of fasta-file         |
+   | ~parse~     | Parse and correct pdb-files                              |
+   | ~pdb_info~  | Information of pdb-file                                  |
+   | ~remove~    | Remove residues from pdb-file                            |
+   | ~renumber~  | Renumber residues and/or chains                          |
+   | ~rmsd~      | Root-mean-square deviation between pdb-files             |
+   | ~rotate~    | Rotate around major axis (eigenvectors)                  |
+   | ~split_pdb~ | Split pdb-file into chains by distance or residue-number |
+   | ~thread~    | Thread sequence onto pdb-file                            |
+   | ~translate~ | Translate chain(s) of pdb-file in x-, y- and z-direction |
+   | ~within~    | List residues within distance of chain                   |
+** Design Choices
+*** Do One Thing and Do It Well
+    Each tool can only do one thing, but does it very fast. Tools can
+    be piped together to achieve more complicated operations.
+*** D Programming Language
+    The D programming language ([[https://dlang.org]]) is still rather
+    unknown, but presents many upsides. It combines the speed of
+    compiled programming languages such as C/C++ or FOTRAN with the
+    ease of use and productivity of interpreted languages such as
+    Python or R. It is a safe language, detecting out of bounce
+    arrays, and handles memory allocations through garbage collection.
+    
+    D allows the fast development of quick tools. To appreciate its
+    speed, consider that parsing a normal-length pdb-file is more than
+    an order of magnitude faster running ~import numpy~ on Python!
+*** Data-Driven Programming
+    The biophysics tools transform input data into output
+    data. Therefore, a data-driven approach is chosen. Most tools are
+    line-oriented, using basic operations (map, filter, reduce) on
+    each ATOM-line of a pdb-file.
+*** Data is Flat
+    Even though a protein can be viewed as a tree (a protein consists
+    of chains, a chain consists of residues, a residue consists of
+    atoms), the internal representation is a flat table of atoms. This
+    helps for data locality and makes lazy data easier.
+*** Lazy data
+    Data is handled lazily, that is, it is only evaluated when needed,
+    for example when printing. This prevents unnecessary and
+    time-consuming conversions from strings to numbers and back.
