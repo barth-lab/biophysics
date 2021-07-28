@@ -114,8 +114,9 @@ cd `dirname $0`
 # Contacts between residues which are at least 5 residue-number appart,
 # remove similar contacts (useful for constraint creation)
 ../bin/contacts -s -o 5 input/1mnb.pdb > output/1mnb.ct
-# Contacts between chain A and B
-../bin/extract -c AB input/3zev.pdb | ../bin/contacts -c B > output/3zev.ct
+# Extract chains A and C, rename to A and B, calculate contacts between chains
+../bin/extract -c AC input/3zev.pdb | ../bin/renumber -r | \
+    ../bin/contacts -c B > output/3zev.ct
 
 ################################################################################
 # THREAD                                                                       #
@@ -130,13 +131,3 @@ cd `dirname $0`
 ../bin/extract -c A input/3zev.pdb  | ../bin/renumber \
 	| ../bin/thread -r -f input/6rz7_3zev.aln \
 	| ../bin/fasta -s > output/6rz7_3zev_rm.fasta
-
-
-################################################################################
-# Regresison test
-################################################################################
-set -e
-
-for f in output/*; do
-	diff -q $f ${f/output/expected} 1>&2
-done

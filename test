@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Unit Test
+dub test
+
+# Regression Test
+cd examples
+./run_examples
+for f in output/*; do
+	diff -q $f ${f/output/expected} 1>&2
+done
