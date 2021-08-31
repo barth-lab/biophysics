@@ -59,10 +59,12 @@ void main(string[] args) {
 	import std.stdio;
 	import std.math;
 
-	bool non = false;
+	bool   non    = false;
+	bool   header = false;
 	string chains = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	auto opt = getopt(
+	auto   opt    = getopt(
 		args,
+		"header|H", "print header", &header,
 		"hetatm|n", "Use non-standard (HETATM) residues", &non,
 		"chains|c", "Chains to rotate, default = all", &chains);
 
@@ -76,6 +78,10 @@ void main(string[] args) {
 			opt.options);
 		return;
 	}
+	if (header) {
+		writefln("#%-7s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s", "com1", "com2", "com3", "w1", "w2", "w3", "v11", "v12", "v13", "v21", "v22", "v23", "v31", "v32", "v33");
+	}
+
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
 	file.parse(non).geometry.writeln;
 }

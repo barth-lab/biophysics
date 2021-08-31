@@ -27,10 +27,12 @@ void main(string[] args) {
 	import biophysics.pdb;
 	import biophysics.fasta;
 
+	bool   header = false;
 	bool chainInfo = false;
 	bool countGaps = false;
 	auto opt     = getopt(
 		args,
+		"header|H", "print header", &header,
 		"chains|c", "Print info per chain", &chainInfo,
 		"count_gaps|g", "Count gap as residue", &countGaps);
 
@@ -53,7 +55,7 @@ void main(string[] args) {
 	//writef("#%8s %8s ", "N_chains", "N_restot");
 	int tot = 0;
 	string schains = "";
-	string sinfo   = "";
+	string sinfo   = format("#%8s %8s ", "N_chains", "N_restot");
 	foreach (ch; fasta) {
 		immutable l = ch.seq.length;
 		if(chainInfo) {
@@ -62,6 +64,8 @@ void main(string[] args) {
 		}
 		tot += l;
 	}
-	//writeln(sinfo);
+	if (header) {
+		writeln(sinfo);
+	}
 	writefln("%9d %8d %s", fasta.length, tot, schains);
 }
