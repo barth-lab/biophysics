@@ -24,7 +24,7 @@ int[] within(R1, R2)(R1 from, R2 to, double dist) {
 	int[] resSeq2;
 	
 	foreach (a; to) {
-		if (!a.isCA) continue;
+		if ((a.isAtom && !a.isCA) || a.isH) continue;
 		coords2  ~= [a.x, a.y, a.z];
 		resSeq2  ~= a.resSeq;
 	}
@@ -53,12 +53,16 @@ void main(string[] args) {
 	import std.array;
 	import biophysics.util;
 
+	bool   non    = false;
 	double dist   = 15;
 	string chains = "";
 	bool   list   = false;
 
 	auto opt = getopt(
 		args,
+
+		"hetatm|n", "Use non-standard (HETATM) residues", &non,
+
 		"chains|c",
 		"contacts to this CHAINS, default = all",
 		&chains,
@@ -83,7 +87,7 @@ void main(string[] args) {
 	}
 
 	auto file = (args.length == 2 ? File(args[1]) : stdin);
-	auto pdb  = file.parse.map!(dup).array;
+	auto pdb  = file.parse(non).map!(dup).array;
 	auto from = pdb.filter!(a => !chains.canFind(a.chainID));
 	auto to   = pdb.filter!(a => chains.canFind(a.chainID));
 	auto res  = within(from, to, dist);

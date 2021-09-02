@@ -27,11 +27,13 @@ void main(string[] args) {
 	import biophysics.pdb;
 	import biophysics.fasta;
 
-	bool   header = false;
+	bool non       = false;
+	bool header    = false;
 	bool chainInfo = false;
 	bool countGaps = false;
 	auto opt     = getopt(
 		args,
+		"hetatm|n", "Use non-standard (HETATM) residues", &non,
 		"header|H", "print header", &header,
 		"chains|c", "Print info per chain", &chainInfo,
 		"count_gaps|g", "Count gap as residue", &countGaps);
@@ -50,7 +52,7 @@ void main(string[] args) {
 	immutable hasFile = args.length == 2;
 	immutable fn      = (hasFile ? args[1] : "");
 	auto file = (hasFile ? File(fn) : stdin);
-	auto fasta = file.parse.fasta(countGaps);
+	auto fasta = file.parse(non).fasta(countGaps);
 
 	//writef("#%8s %8s ", "N_chains", "N_restot");
 	int tot = 0;
