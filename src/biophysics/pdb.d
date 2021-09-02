@@ -35,6 +35,9 @@ void print(Range)(Range atoms, File file = stdout) {
 
 	for(;;) {
 		char chainID_i = ai.chainID;
+		if (chainID_i < 'A' || chainID_i > 'Z') {
+			ai.chainID = 'A';
+		}
 		if (chainID_i != ch) {
 			ch         = chainID_i;
 			ter.serial = i++;
