@@ -13,15 +13,15 @@ import std.string;
 import std.stdio;
 
 /// Parse a pbd-file, including hetatoms or not
-auto parse(File file, bool heterogen=false) {
-	bool function(Atom a) f =
+@trusted auto parse(File file, bool heterogen=false) {
+	bool function(Atom a) @trusted f =
 	        (heterogen ? (l => l.hasLength && (l.isAtom || l.isHeterogen))
 	                   : (l => l.hasLength && l.isAtom));
 	return file.byLine.filter!f;
 }
 
 /// Print a pdb-file, including TER lines and END lines
-void print(Range)(Range atoms, File file = stdout) {
+@trusted void print(Range)(Range atoms, File file = stdout) {
 	import std.stdio;
 	import std.range;
 
@@ -59,7 +59,7 @@ void print(Range)(Range atoms, File file = stdout) {
 }
 
 /// Print each chain to a pdb-file, including TER lines and END lines
-void print_chains(Range)(Range atoms, string filename) {
+@trusted void print_chains(Range)(Range atoms, string filename) {
 	import std.stdio;
 	import std.range;
 
@@ -103,7 +103,7 @@ void print_chains(Range)(Range atoms, string filename) {
 }
 
 /// TER line of pdb
-string ter(Atom a) pure nothrow {
+@trusted string ter(Atom a) pure nothrow {
 	char[80] t = a.dup;	
 	t[0..6]    = "TER   ";
 	t[11..17].fill(' ');
@@ -112,7 +112,7 @@ string ter(Atom a) pure nothrow {
 }
 
 /// Distance between two atoms
-double distance(const Atom a1, const Atom a2) pure {
+@trusted double distance(const Atom a1, const Atom a2) pure {
 	import std.math;
 	immutable dx = a1.x - a2.x;
 	immutable dy = a1.y - a2.y;
@@ -121,7 +121,7 @@ double distance(const Atom a1, const Atom a2) pure {
 }
 
 /// Distance between two points
-double distance(const double[3] c1, const double[3] c2) pure nothrow {
+@trusted double distance(const double[3] c1, const double[3] c2) pure nothrow {
 	import std.math;
 	double[3] dc = c1[] - c2[];
 	return sqrt(dc[0]*dc[0] + dc[1]*dc[1] + dc[2]*dc[2]);
@@ -136,22 +136,22 @@ unittest {
 }
 
 /// Has an atom-line the correct length
-bool hasLength(char[] l) pure nothrow { return l.length  == 80; }
+@trusted bool hasLength(char[] l) pure nothrow { return l.length  == 80; }
 
 /// Is it an ATOM-Record?
-bool isAtom(char[] l) pure nothrow { return l[0 .. 4] == "ATOM"; }
+@trusted bool isAtom(char[] l) pure nothrow { return l[0 .. 4] == "ATOM"; }
 
 /// Is it an HETATM-Record?
-bool isHeterogen(char[] l) pure nothrow { return l[0 .. 6] == "HETATM"; }
+@trusted bool isHeterogen(char[] l) pure nothrow { return l[0 .. 6] == "HETATM"; }
 
 /// Pseudo-Atom-type
 alias Atom = char[];
 
-uint serial(const Atom atom) pure { return atom[6 .. 11].stripLeft.to!uint; }
-void serial(Atom atom, uint value) pure { atom[6 .. 11].sformat!"%5u"(value); }
+@trusted uint serial(const Atom atom) pure { return atom[6 .. 11].stripLeft.to!uint; }
+@trusted void serial(Atom atom, uint value) pure { atom[6 .. 11].sformat!"%5u"(value); }
 
-string name(const Atom atom) pure { return atom[12 .. 16].strip.to!string; }
-void name(Atom atom, string value) pure {
+@trusted string name(const Atom atom) pure { return atom[12 .. 16].strip.to!string; }
+@trusted void name(Atom atom, string value) pure {
 	import std.ascii;
 	if (value.length >= 4) {
 		atom[12 .. 16] = value[0 .. 4];
@@ -164,62 +164,62 @@ void name(Atom atom, string value) pure {
 	}
 }
 
-char altLoc(const Atom atom) pure nothrow { return atom[16]; }
-void altLoc(Atom atom, char value) pure nothrow { atom[16] = value; }
+@trusted char altLoc(const Atom atom) pure nothrow { return atom[16]; }
+@trusted void altLoc(Atom atom, char value) pure nothrow { atom[16] = value; }
 
-string resName(const Atom atom) pure { return atom[17 .. 20].to!string; }
-void resName(Atom atom, string value) pure { atom[17 .. 20].sformat!"%3s"(value); }
+@trusted string resName(const Atom atom) pure { return atom[17 .. 20].to!string; }
+@trusted void resName(Atom atom, string value) pure { atom[17 .. 20].sformat!"%3s"(value); }
 
-char chainID(const Atom atom) pure nothrow { return atom[21]; }
-void chainID(Atom atom, char value) pure { atom[21] = value; }
+@trusted char chainID(const Atom atom) pure nothrow { return atom[21]; }
+@trusted void chainID(Atom atom, char value) pure { atom[21] = value; }
 
-uint resSeq(const Atom atom) pure { return atom[22 .. 26].stripLeft.to!uint; }
-void resSeq(Atom atom, uint value) pure { atom[22 .. 26].sformat!"%4u"(value); }
+@trusted uint resSeq(const Atom atom) pure { return atom[22 .. 26].stripLeft.to!uint; }
+@trusted void resSeq(Atom atom, uint value) pure { atom[22 .. 26].sformat!"%4u"(value); }
 
-char iCode(const Atom atom) pure nothrow { return atom[26]; }
-void iCode(Atom atom, char value) pure nothrow { atom[26] = value; }
+@trusted char iCode(const Atom atom) pure nothrow { return atom[26]; }
+@trusted void iCode(Atom atom, char value) pure nothrow { atom[26] = value; }
 
-double x(const Atom atom) pure { return atom[30 .. 38].stripLeft.to!double; }
-void x(Atom atom, double value) { atom[30 .. 38].sformat!"%8.3f"(value); }
-double y(const Atom atom) pure { return atom[38 .. 46].stripLeft.to!double; }
-void y(Atom atom, double value) { atom[38 .. 46].sformat!"%8.3f"(value); }
-double z(const Atom atom) pure { return atom[46 .. 54].stripLeft.to!double; }
-void z(Atom atom, double value) { atom[46 .. 54].sformat!"%8.3f"(value); }
+@trusted double x(const Atom atom) pure { return atom[30 .. 38].stripLeft.to!double; }
+@trusted void x(Atom atom, double value) { atom[30 .. 38].sformat!"%8.3f"(value); }
+@trusted double y(const Atom atom) pure { return atom[38 .. 46].stripLeft.to!double; }
+@trusted void y(Atom atom, double value) { atom[38 .. 46].sformat!"%8.3f"(value); }
+@trusted double z(const Atom atom) pure { return atom[46 .. 54].stripLeft.to!double; }
+@trusted void z(Atom atom, double value) { atom[46 .. 54].sformat!"%8.3f"(value); }
 
-double occupancy(const Atom atom) pure { return atom[54 .. 60].stripLeft.to!double; }
-void occupancy(Atom atom, double value) { atom[54 .. 60].sformat!"%6.2f"(value); }
-double tempFactor(const Atom atom) pure { return atom[60 .. 66].stripLeft.to!double; }
-void tempFactor(Atom atom, double value) { atom[60 .. 66].sformat!"%6.2f"(value); }
+@trusted double occupancy(const Atom atom) pure { return atom[54 .. 60].stripLeft.to!double; }
+@trusted void occupancy(Atom atom, double value) { atom[54 .. 60].sformat!"%6.2f"(value); }
+@trusted double tempFactor(const Atom atom) pure { return atom[60 .. 66].stripLeft.to!double; }
+@trusted void tempFactor(Atom atom, double value) { atom[60 .. 66].sformat!"%6.2f"(value); }
 
-string element(const Atom atom) pure { return atom[76 .. 78].strip.to!string; }
-void element(Atom atom, string value) pure { atom[76 .. 78].sformat!"%2s"(value); }
+@trusted string element(const Atom atom) pure { return atom[76 .. 78].strip.to!string; }
+@trusted void element(Atom atom, string value) pure { atom[76 .. 78].sformat!"%2s"(value); }
 
-string charge(const Atom atom) pure { return atom[78 .. 80].strip.to!string; }
-void charge(Atom atom, string value) pure { atom[78 .. 80].sformat!"%2s"(value); }
+@trusted string charge(const Atom atom) pure { return atom[78 .. 80].strip.to!string; }
+@trusted void charge(Atom atom, string value) pure { atom[78 .. 80].sformat!"%2s"(value); }
 
-bool isH(const Atom atom) pure nothrow { return atom[13] == 'H';}
+@trusted bool isH(const Atom atom) pure nothrow { return atom[13] == 'H';}
 
-bool isO(const Atom atom) pure nothrow { return atom[13] == 'O';}
+@trusted bool isO(const Atom atom) pure nothrow { return atom[13] == 'O';}
 
-bool isN(const Atom atom) pure nothrow { return atom[13] == 'N';}
+@trusted bool isN(const Atom atom) pure nothrow { return atom[13] == 'N';}
 
-bool isC(const Atom atom) pure nothrow { return atom[13] == 'C';}
+@trusted bool isC(const Atom atom) pure nothrow { return atom[13] == 'C';}
 
-bool isNonPolar(const Atom atom) pure nothrow {
+@trusted bool isNonPolar(const Atom atom) pure nothrow {
 	immutable nonPolar = ["ALA", "CYS", "GLY", "ILE", "LEU",
 			      "MET", "PHE", "PRO", "TRP", "VAL"];
 	auto r = atom[17 .. 20];
 	return nonPolar.canFind(r);
 }
 
-bool isBB(const Atom atom) pure nothrow {
+@trusted bool isBB(const Atom atom) pure nothrow {
 	auto n = atom[12..16];
 	return (n == " N  " || n == " C  " || n == " O  " || n == " CA ");
 }
 
-bool isCB(const Atom atom) pure nothrow { return atom[12 .. 16] == " CB ";}
+@trusted bool isCB(const Atom atom) pure nothrow { return atom[12 .. 16] == " CB ";}
 
-bool isCA(const Atom atom) pure nothrow { return atom[12 .. 16] == " CA ";}
+@trusted bool isCA(const Atom atom) pure nothrow { return atom[12 .. 16] == " CA ";}
 
 enum char[80] GLY =  "ATOM      1  CA  GLY A   1       0.000   0.000   0.000 -1.00  0.00           C  ";
 
